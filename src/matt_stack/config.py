@@ -1,0 +1,121 @@
+"""Configuration dataclasses and constants."""
+
+from __future__ import annotations
+
+import re
+from dataclasses import dataclass
+from enum import Enum
+from pathlib import Path
+
+
+class ProjectType(str, Enum):
+    FULLSTACK = "fullstack"
+    BACKEND_ONLY = "backend-only"
+    FRONTEND_ONLY = "frontend-only"
+
+
+class Variant(str, Enum):
+    STARTER = "starter"
+    B2B = "b2b"
+
+
+class FrontendFramework(str, Enum):
+    REACT_VITE = "react-vite"
+    REACT_VITE_STARTER = "react-vite-starter"
+
+
+class DeploymentTarget(str, Enum):
+    DOCKER = "docker"
+    RAILWAY = "railway"
+    RENDER = "render"
+
+
+REPO_URLS: dict[str, str] = {
+    "django-ninja": "https://github.com/mattjaikaran/django-ninja-boilerplate.git",
+    "react-vite": "https://github.com/mattjaikaran/react-vite-boilerplate.git",
+    "react-vite-starter": "https://github.com/mattjaikaran/react-vite-starter.git",
+    "swift-ios": "https://github.com/mattjaikaran/swift-ios-starter.git",
+}
+
+DEFAULT_BRANCH = "main"
+
+
+def normalize_name(name: str) -> str:
+    """Normalize project name: lowercase, hyphens, no special chars."""
+    name = name.lower().strip()
+    name = re.sub(r"[^a-z0-9-]", "-", name)
+    name = re.sub(r"-+", "-", name)
+    return name.strip("-")
+
+
+def to_python_package(name: str) -> str:
+    """Convert project name to valid Python package name."""
+    return normalize_name(name).replace("-", "_")
+
+
+@dataclass
+class ProjectConfig:
+    """Full configuration for a project scaffold."""
+
+    name: str
+    path: Path
+    project_type: ProjectType = ProjectType.FULLSTACK
+    variant: Variant = Variant.STARTER
+    frontend_framework: FrontendFramework = FrontendFramework.REACT_VITE
+    include_ios: bool = False
+    use_celery: bool = True
+    use_redis: bool = True
+    deployment: DeploymentTarget = DeploymentTarget.DOCKER
+    init_git: bool = True
+    author_name: str = "Matt Jaikaran"
+    author_email: str = "info@mattjaikaran.com"
+    dry_run: bool = False
+
+    def __post_init__(self) -> None:
+        self.name = normalize_name(self.name)
+        if isinstance(self.path, str):
+            self.path = Path(self.path)
+
+    @property
+    def python_package_name(self) -> str:
+        return to_python_package(self.name)
+
+    @property
+    def display_name(self) -> str:
+        return self.name.replace("-", " ").title()
+
+    @property
+    def has_backend(self) -> bool:
+        return self.project_type in (ProjectType.FULLSTACK, ProjectType.BACKEND_ONLY)
+
+    @property
+    def has_frontend(self) -> bool:
+        return self.project_type in (ProjectType.FULLSTACK, ProjectType.FRONTEND_ONLY)
+
+    @property
+    def is_fullstack(self) -> bool:
+        return self.project_type == ProjectType.FULLSTACK
+
+    @property
+    def is_b2b(self) -> bool:
+        return self.variant == Variant.B2B
+
+    @property
+    def backend_dir(self) -> Path:
+        return self.path / "backend"
+
+    @property
+    def frontend_dir(self) -> Path:
+        return self.path / "frontend"
+
+    @property
+    def ios_dir(self) -> Path:
+        return self.path / "ios"
+
+    @property
+    def backend_repo_key(self) -> str:
+        return "django-ninja"
+
+    @property
+    def frontend_repo_key(self) -> str:
+        return self.frontend_framework.value
