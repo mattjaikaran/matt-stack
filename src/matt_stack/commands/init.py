@@ -1,0 +1,268 @@
+"""Init command: interactive wizard + orchestration."""
+
+from __future__ import annotations
+
+from pathlib import Path
+
+import questionary
+from rich.panel import Panel
+from rich.table import Table
+
+from matt_stack.config import (
+    FrontendFramework,
+    ProjectConfig,
+    ProjectType,
+    Variant,
+)
+from matt_stack.generators.backend_only import BackendOnlyGenerator
+from matt_stack.generators.frontend_only import FrontendOnlyGenerator
+from matt_stack.generators.fullstack import FullstackGenerator
+from matt_stack.presets import get_preset
+from matt_stack.utils.console import console, print_error, print_success
+from matt_stack.utils.yaml_config import load_config_file
+
+STYLE = questionary.Style([
+    ("qmark", "fg:cyan bold"),
+    ("question", "bold"),
+    ("answer", "fg:cyan bold"),
+    ("pointer", "fg:cyan bold"),
+    ("highlighted", "fg:cyan bold"),
+    ("selected", "fg:cyan"),
+])
+
+
+def run_init(
+    name: str | None = None,
+    preset: str | None = None,
+    config_file: str | None = None,
+    ios: bool = False,
+    output_dir: Path | None = None,
+) -> None:
+    """Main init entry point. Routes to interactive, preset, or config-file mode."""
+    if output_dir is None:
+        output_dir = Path.cwd()
+
+    try:
+        if config_file:
+            _run_from_config(Path(config_file), output_dir)
+        elif preset and name:
+            _run_from_preset(name, preset, ios, output_dir)
+        elif name and not preset:
+            # Name given but no preset — still run interactive for options
+            _run_interactive(output_dir, default_name=name)
+        else:
+            _run_interactive(output_dir)
+    except KeyboardInterrupt:
+        console.print("\n[yellow]Cancelled.[/yellow]")
+        raise SystemExit(130) from None
+
+
+def _run_from_config(config_path: Path, output_dir: Path) -> None:
+    """Generate from a YAML config file."""
+    config = load_config_file(config_path, output_dir)
+    if config is None:
+        raise SystemExit(1)
+    _generate(config)
+
+
+def _run_from_preset(name: str, preset_name: str, ios: bool, output_dir: Path) -> None:
+    """Generate from a named preset."""
+    preset = get_preset(preset_name)
+    if preset is None:
+        print_error(f"Unknown preset: {preset_name}")
+        print_error("Run 'matt-stack info' to see available presets")
+        raise SystemExit(1)
+
+    config = preset.to_config(name, output_dir / name)
+    if ios:
+        config.include_ios = True
+
+    _show_summary(config)
+    _generate(config)
+
+
+def _run_interactive(output_dir: Path, default_name: str | None = None) -> None:
+    """Run the interactive wizard."""
+    _show_welcome()
+
+    # 1. Project name
+    if default_name:
+        project_name = default_name
+    else:
+        project_name = questionary.text(
+            "Project name:",
+            style=STYLE,
+        ).ask()
+        if not project_name:
+            raise KeyboardInterrupt
+
+    # 2. Project type
+    project_type_choice = questionary.select(
+        "Project type:",
+        choices=[
+            questionary.Choice("Fullstack Monorepo (Backend + Frontend)", value="fullstack"),
+            questionary.Choice("Backend Only (Django API)", value="backend-only"),
+            questionary.Choice("Frontend Only (React Vite SPA)", value="frontend-only"),
+        ],
+        style=STYLE,
+    ).ask()
+    if not project_type_choice:
+        raise KeyboardInterrupt
+    project_type = ProjectType(project_type_choice)
+
+    # 3. Variant
+    variant_choice = questionary.select(
+        "Variant:",
+        choices=[
+            questionary.Choice("Starter (standard)", value="starter"),
+            questionary.Choice("B2B (organizations, teams, roles)", value="b2b"),
+        ],
+        style=STYLE,
+    ).ask()
+    if not variant_choice:
+        raise KeyboardInterrupt
+    variant = Variant(variant_choice)
+
+    # 4. Frontend framework (if applicable)
+    frontend_framework = FrontendFramework.REACT_VITE
+    if project_type in (ProjectType.FULLSTACK, ProjectType.FRONTEND_ONLY):
+        fw_choice = questionary.select(
+            "Frontend framework:",
+            choices=[
+                questionary.Choice("React Vite + TanStack Router", value="react-vite"),
+                questionary.Choice(
+                    "React Vite + React Router (simpler)", value="react-vite-starter"
+                ),
+            ],
+            style=STYLE,
+        ).ask()
+        if not fw_choice:
+            raise KeyboardInterrupt
+        frontend_framework = FrontendFramework(fw_choice)
+
+    # 5. iOS (if fullstack)
+    include_ios = False
+    if project_type == ProjectType.FULLSTACK:
+        include_ios = questionary.confirm(
+            "Include iOS client?",
+            default=False,
+            style=STYLE,
+        ).ask()
+        if include_ios is None:
+            raise KeyboardInterrupt
+
+    # 6. Celery
+    use_celery = True
+    if project_type in (ProjectType.FULLSTACK, ProjectType.BACKEND_ONLY):
+        use_celery = questionary.confirm(
+            "Include Celery background tasks?",
+            default=True,
+            style=STYLE,
+        ).ask()
+        if use_celery is None:
+            raise KeyboardInterrupt
+
+    # Build config
+    config = ProjectConfig(
+        name=project_name,
+        path=output_dir / project_name,
+        project_type=project_type,
+        variant=variant,
+        frontend_framework=frontend_framework,
+        include_ios=include_ios,
+        use_celery=use_celery,
+        use_redis=use_celery,  # Redis follows Celery
+    )
+
+    # 7. Summary + confirm
+    _show_summary(config)
+
+    proceed = questionary.confirm(
+        "Generate project?",
+        default=True,
+        style=STYLE,
+    ).ask()
+    if not proceed:
+        console.print("[yellow]Cancelled.[/yellow]")
+        return
+
+    _generate(config)
+
+
+def _show_welcome() -> None:
+    console.print()
+    console.print(
+        Panel(
+            "[bold cyan]matt-stack[/bold cyan] — scaffold fullstack monorepos",
+            border_style="cyan",
+            expand=False,
+        )
+    )
+    console.print()
+
+
+def _show_summary(config: ProjectConfig) -> None:
+    console.print()
+    table = Table(title="Project Summary", show_header=False, border_style="cyan")
+    table.add_column("Key", style="cyan")
+    table.add_column("Value")
+
+    table.add_row("Name", config.name)
+    table.add_row("Type", config.project_type.value)
+    table.add_row("Variant", config.variant.value)
+    if config.has_frontend:
+        table.add_row("Frontend", config.frontend_framework.value)
+    if config.has_backend:
+        table.add_row("Celery", "yes" if config.use_celery else "no")
+        table.add_row("Redis", "yes" if config.use_redis else "no")
+    table.add_row("iOS", "yes" if config.include_ios else "no")
+    table.add_row("Path", str(config.path))
+
+    console.print(table)
+    console.print()
+
+
+def _generate(config: ProjectConfig) -> bool:
+    """Run the appropriate generator."""
+    if config.path.exists():
+        print_error(f"Directory already exists: {config.path}")
+        raise SystemExit(1)
+
+    generator: FullstackGenerator | BackendOnlyGenerator | FrontendOnlyGenerator
+    if config.project_type == ProjectType.FULLSTACK:
+        generator = FullstackGenerator(config)
+    elif config.project_type == ProjectType.BACKEND_ONLY:
+        generator = BackendOnlyGenerator(config)
+    elif config.project_type == ProjectType.FRONTEND_ONLY:
+        generator = FrontendOnlyGenerator(config)
+    else:
+        print_error(f"Unknown project type: {config.project_type}")
+        raise SystemExit(1)
+
+    success = generator.run()
+
+    if success:
+        _print_next_steps(config)
+
+    return success
+
+
+def _print_next_steps(config: ProjectConfig) -> None:
+    console.print()
+    print_success(f"Project '{config.name}' created successfully!")
+    console.print()
+    console.print("[bold]Next steps:[/bold]")
+    console.print(f"  [cyan]cd {config.name}[/cyan]")
+    console.print("  [cyan]make setup[/cyan]")
+    if config.has_backend:
+        console.print("  [cyan]make up[/cyan]          # Start Docker services")
+        console.print("  [cyan]make backend-migrate[/cyan]")
+        console.print("  [cyan]make backend-superuser[/cyan]")
+    if config.is_fullstack:
+        console.print("  [cyan]make backend-dev[/cyan]  # http://localhost:8000")
+        console.print("  [cyan]make frontend-dev[/cyan] # http://localhost:3000")
+    elif config.has_backend:
+        console.print("  [cyan]make backend-dev[/cyan]  # http://localhost:8000")
+    elif config.has_frontend:
+        console.print("  [cyan]make frontend-dev[/cyan] # http://localhost:3000")
+    console.print()
