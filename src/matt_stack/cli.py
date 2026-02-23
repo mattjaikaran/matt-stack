@@ -71,6 +71,46 @@ def presets() -> None:
 
 
 @app.command()
+def audit(
+    path: Annotated[
+        Path | None,
+        typer.Argument(help="Project path to audit (default: current directory)"),
+    ] = None,
+    audit_type: Annotated[
+        list[str] | None,
+        typer.Option("--type", "-t", help="Audit type: types, quality, endpoints, tests"),
+    ] = None,
+    live: Annotated[
+        bool,
+        typer.Option("--live", help="Enable live endpoint probing (GET only)"),
+    ] = False,
+    no_todo: Annotated[
+        bool,
+        typer.Option("--no-todo", help="Skip writing to tasks/todo.md"),
+    ] = False,
+    json_output: Annotated[
+        bool,
+        typer.Option("--json", help="Output as JSON"),
+    ] = False,
+    fix: Annotated[
+        bool,
+        typer.Option("--fix", help="Auto-remove debug statements"),
+    ] = False,
+) -> None:
+    """Run static analysis on a generated project."""
+    from matt_stack.commands.audit import run_audit
+
+    run_audit(
+        path=path or Path.cwd(),
+        audit_types=audit_type,
+        live=live,
+        no_todo=no_todo,
+        json_output=json_output,
+        fix=fix,
+    )
+
+
+@app.command()
 def version() -> None:
     """Show matt-stack version."""
     typer.echo(f"matt-stack {__version__}")

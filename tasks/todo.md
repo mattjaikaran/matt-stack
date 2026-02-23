@@ -44,8 +44,26 @@
 - [x] E2E verification (all 4 preset types)
 - [x] Lint clean (ruff)
 
+## Phase 7: Audit Command
+- [x] parsers/ — 5 regex-based parser modules
+- [x] auditors/base.py — data model (AuditFinding, AuditConfig, BaseAuditor)
+- [x] auditors/quality.py — TODOs, stubs, debug, credentials
+- [x] auditors/types.py — Pydantic ↔ TS/Zod comparison
+- [x] auditors/endpoints.py — route analysis + live probing
+- [x] auditors/tests.py — coverage gaps + feature mapping
+- [x] auditors/report.py — Rich tables + idempotent todo.md writer
+- [x] commands/audit.py — orchestrator
+- [x] cli.py — audit command wired
+- [x] Tests (48 passing — 26 new)
+- [x] E2E: audit on starter-fullstack produces 476 findings across all 4 domains
+- [x] E2E: idempotent todo.md re-write verified
+- [x] E2E: JSON output validated
+- [x] README.md — full rewrite with audit docs
+- [x] CLAUDE.md — expanded with file map, patterns, workflows
+
 ## Future
-- [ ] `matt-stack audit` command — type safety audit (Pydantic ↔ Zod/TS sync)
-- [ ] Auto-append audit results to generated tasks/todo.md
 - [ ] YAML config mode E2E test
 - [ ] iOS generator customization (rename MyApp references)
+- [ ] `matt-stack upgrade` — pull latest boilerplate changes into existing project
+- [ ] `matt-stack add` — add iOS/frontend/backend to existing project
+- [ ] Plugin system for custom auditors

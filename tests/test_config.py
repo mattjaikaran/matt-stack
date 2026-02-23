@@ -4,7 +4,6 @@ from pathlib import Path
 
 from matt_stack.config import (
     ProjectConfig,
-    ProjectType,
     Variant,
     normalize_name,
     to_python_package,
