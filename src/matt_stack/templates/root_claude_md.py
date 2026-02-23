@@ -1,0 +1,112 @@
+"""Root CLAUDE.md template for generated projects."""
+
+from __future__ import annotations
+
+from matt_stack.config import ProjectConfig
+
+
+def generate_claude_md(config: ProjectConfig) -> str:
+    """Generate CLAUDE.md for AI assistant context."""
+    sections = [_header(config), _structure(config), _tech(config), _commands(config)]
+
+    if config.has_backend:
+        sections.append(_backend(config))
+
+    if config.has_frontend:
+        sections.append(_frontend(config))
+
+    if config.include_ios:
+        sections.append(_ios())
+
+    sections.append(_rules())
+
+    return "\n\n".join(sections) + "\n"
+
+
+def _header(config: ProjectConfig) -> str:
+    variant = " (B2B)" if config.is_b2b else ""
+    return f"# {config.display_name}{variant}"
+
+
+def _structure(config: ProjectConfig) -> str:
+    parts = []
+    if config.has_backend:
+        parts.append("- `backend/` — Django API (django-ninja)")
+    if config.has_frontend:
+        is_tanstack = config.frontend_framework.value == "react-vite"
+        fw = "TanStack Router" if is_tanstack else "React Router"
+        parts.append(f"- `frontend/` — React + Vite + TypeScript ({fw})")
+    if config.include_ios:
+        parts.append("- `ios/` — SwiftUI iOS client (iOS 17+)")
+
+    return "## Structure\n\n" + "\n".join(parts)
+
+
+def _tech(config: ProjectConfig) -> str:
+    parts = []
+    if config.has_backend:
+        parts.append("- Backend: Python 3.12+, Django, django-ninja, PostgreSQL 17")
+        if config.use_celery:
+            parts.append("- Background: Celery + Redis")
+    if config.has_frontend:
+        parts.append("- Frontend: React 18, Vite, TypeScript (strict)")
+    if config.include_ios:
+        parts.append("- iOS: SwiftUI, MVVM, async/await, iOS 17+")
+
+    return "## Tech Stack\n\n" + "\n".join(parts)
+
+
+def _commands(config: ProjectConfig) -> str:
+    return """\
+## Commands
+
+```bash
+make setup          # Install all deps
+make up             # Start Docker services
+make down           # Stop services
+make test           # Run all tests
+make lint           # Lint all code
+make format         # Format all code
+make backend-dev    # Django dev server (port 8000)
+make frontend-dev   # Vite dev server (port 3000)
+```"""
+
+
+def _backend(config: ProjectConfig) -> str:
+    return """\
+## Backend
+
+- Package manager: `uv` (NOT pip)
+- Linting: `ruff`
+- Testing: `pytest`
+- API style: django-ninja (type-safe, OpenAPI auto-gen)
+- Migrations: `make backend-migrate` / `make backend-makemigrations`"""
+
+
+def _frontend(config: ProjectConfig) -> str:
+    return """\
+## Frontend
+
+- Package manager: `bun` (NOT npm/yarn)
+- API base: `VITE_API_BASE_URL` env var
+- Styling: Tailwind CSS
+- State: TanStack Query for server state"""
+
+
+def _ios() -> str:
+    return """\
+## iOS
+
+- SwiftUI with MVVM pattern
+- Async/await networking
+- iOS 17+ minimum deployment target"""
+
+
+def _rules() -> str:
+    return """\
+## Rules
+
+- Never use pip, npm, or yarn — use uv (Python) and bun (JS)
+- Always use type hints (Python) and strict TypeScript
+- Test before committing
+- Keep backend and frontend changes in sync"""

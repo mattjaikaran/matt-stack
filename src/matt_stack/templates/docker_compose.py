@@ -1,0 +1,179 @@
+"""Docker Compose dev template for generated projects."""
+
+from __future__ import annotations
+
+from matt_stack.config import ProjectConfig
+
+
+def generate_docker_compose(config: ProjectConfig) -> str:
+    """Generate docker-compose.yml for development."""
+    services: list[str] = []
+    volumes: list[str] = []
+
+    if config.has_backend:
+        services.append(_db_service(config))
+        volumes.append("  postgres_data:")
+
+        if config.use_redis:
+            services.append(_redis_service())
+            volumes.append("  redis_data:")
+
+        services.append(_api_dev_service(config))
+
+        if config.use_celery:
+            services.append(_celery_worker_service(config))
+            services.append(_celery_beat_service(config))
+
+    if config.has_frontend:
+        services.append(_frontend_dev_service(config))
+
+    services_block = "\n\n".join(services)
+    volumes_block = "\n".join(volumes)
+
+    result = f"""services:
+{services_block}"""
+
+    if volumes:
+        result += f"""
+
+volumes:
+{volumes_block}"""
+
+    return result
+
+
+def _db_service(config: ProjectConfig) -> str:
+    return f"""\
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: ${{POSTGRES_DB:-{config.python_package_name}}}
+      POSTGRES_USER: ${{POSTGRES_USER:-postgres}}
+      POSTGRES_PASSWORD: ${{POSTGRES_PASSWORD:-postgres}}
+    ports:
+      - "${{DB_PORT:-5432}}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5"""
+
+
+def _redis_service() -> str:
+    return """\
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5"""
+
+
+def _api_dev_service(config: ProjectConfig) -> str:
+    depends = ["db"]
+    if config.use_redis:
+        depends.append("redis")
+
+    depends_block = "\n".join(
+        f"      {dep}:\n        condition: service_healthy" for dep in depends
+    )
+
+    env_lines = [
+        "      DEBUG=true",
+        f"      DATABASE_URL=postgres://postgres:postgres@db:5432/{config.python_package_name}",
+        "      DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY:-change-me-in-production}",
+    ]
+    if config.use_redis:
+        env_lines.append("      REDIS_URL=redis://redis:6379/0")
+    env_lines.append(
+        "      CORS_ALLOWED_ORIGINS=http://localhost:3000,http://localhost:5173"
+    )
+
+    env_block = "\n".join(env_lines)
+
+    return f"""\
+  api-dev:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    command: uv run python manage.py runserver 0.0.0.0:8000
+    ports:
+      - "${{API_PORT:-8000}}:8000"
+    volumes:
+      - ./backend:/app
+    environment:
+{env_block}
+    depends_on:
+{depends_block}"""
+
+
+def _celery_worker_service(config: ProjectConfig) -> str:
+    return f"""\
+  celery-worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    command: uv run celery -A {config.python_package_name} worker -l info
+    volumes:
+      - ./backend:/app
+    environment:
+      DATABASE_URL: postgres://postgres:postgres@db:5432/{config.python_package_name}
+      REDIS_URL: redis://redis:6379/0
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    profiles:
+      - celery"""
+
+
+def _celery_beat_service(config: ProjectConfig) -> str:
+    return f"""\
+  celery-beat:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    command: uv run celery -A {config.python_package_name} beat -l info
+    volumes:
+      - ./backend:/app
+    environment:
+      DATABASE_URL: postgres://postgres:postgres@db:5432/{config.python_package_name}
+      REDIS_URL: redis://redis:6379/0
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    profiles:
+      - celery"""
+
+
+def _frontend_dev_service(config: ProjectConfig) -> str:
+    depends = ""
+    if config.has_backend:
+        depends = """
+    depends_on:
+      - api-dev"""
+
+    return f"""\
+  frontend-dev:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    command: bun run dev --host
+    ports:
+      - "${{FRONTEND_PORT:-3000}}:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    environment:
+      VITE_API_BASE_URL: http://localhost:8000/api/v1
+      VITE_MODE: django-spa{depends}"""
