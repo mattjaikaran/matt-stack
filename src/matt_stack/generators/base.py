@@ -5,10 +5,18 @@ from __future__ import annotations
 import json
 import re
 import shutil
+from abc import ABC, abstractmethod
+from collections.abc import Callable
 from pathlib import Path
 
 from matt_stack.config import REPO_URLS, ProjectConfig
-from matt_stack.utils.console import print_error, print_info, print_success, print_warning
+from matt_stack.utils.console import (
+    create_progress,
+    print_error,
+    print_info,
+    print_success,
+    print_warning,
+)
 from matt_stack.utils.git import (
     clone_repo,
     create_initial_commit,
@@ -17,7 +25,7 @@ from matt_stack.utils.git import (
 )
 
 
-class BaseGenerator:
+class BaseGenerator(ABC):
     """Base class for project generators."""
 
     def __init__(self, config: ProjectConfig) -> None:
@@ -143,6 +151,20 @@ class BaseGenerator:
             shutil.rmtree(self.config.path, ignore_errors=True)
             print_warning(f"Cleaned up partial project: {self.config.path}")
 
+    @property
+    @abstractmethod
+    def steps(self) -> list[tuple[str, Callable]]:
+        """Return list of (description, step_fn) tuples for the generator."""
+
     def run(self) -> bool:
-        """Generate the project. Must be implemented by subclasses."""
-        raise NotImplementedError("Subclasses must implement run()")
+        """Execute the generator steps with a progress bar."""
+        with create_progress() as progress:
+            task = progress.add_task("Generating project...", total=len(self.steps))
+            for description, step_fn in self.steps:
+                progress.update(task, description=description)
+                result = step_fn()
+                if result is False:
+                    self.cleanup()
+                    return False
+                progress.advance(task)
+        return True

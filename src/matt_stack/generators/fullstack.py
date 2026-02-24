@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
+
 from matt_stack.generators.base import BaseGenerator
 from matt_stack.post_processors.b2b import print_b2b_instructions
 from matt_stack.post_processors.customizer import customize_backend, customize_frontend
@@ -13,14 +15,15 @@ from matt_stack.templates.root_env import generate_env_example
 from matt_stack.templates.root_gitignore import generate_gitignore
 from matt_stack.templates.root_makefile import generate_makefile
 from matt_stack.templates.root_readme import generate_readme
-from matt_stack.utils.console import create_progress, print_error
+from matt_stack.utils.console import print_error
 
 
 class FullstackGenerator(BaseGenerator):
     """Generate a fullstack monorepo: backend + frontend + optional iOS."""
 
-    def run(self) -> bool:
-        steps = [
+    @property
+    def steps(self) -> list[tuple[str, Callable]]:
+        steps: list[tuple[str, Callable]] = [
             ("Creating project directory", self._step_create_dir),
             ("Cloning backend", self._step_clone_backend),
             ("Cloning frontend", self._step_clone_frontend),
@@ -35,17 +38,7 @@ class FullstackGenerator(BaseGenerator):
         if self.config.include_ios:
             steps.insert(3, ("Cloning iOS starter", self._step_clone_ios))
 
-        with create_progress() as progress:
-            task = progress.add_task("Generating project...", total=len(steps))
-            for description, step_fn in steps:
-                progress.update(task, description=description)
-                result = step_fn()
-                if result is False:
-                    self.cleanup()
-                    return False
-                progress.advance(task)
-
-        return True
+        return steps
 
     def _step_create_dir(self) -> bool:
         return self.create_root_directory()

@@ -2,37 +2,28 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
+
 from matt_stack.generators.base import BaseGenerator
 from matt_stack.post_processors.customizer import customize_frontend
 from matt_stack.templates.root_gitignore import generate_gitignore
 from matt_stack.templates.root_makefile import generate_makefile
 from matt_stack.templates.root_readme import generate_readme
-from matt_stack.utils.console import create_progress, print_error
+from matt_stack.utils.console import print_error
 
 
 class FrontendOnlyGenerator(BaseGenerator):
     """Generate a frontend-only project (React Vite SPA)."""
 
-    def run(self) -> bool:
-        steps = [
+    @property
+    def steps(self) -> list[tuple[str, Callable]]:
+        return [
             ("Creating project directory", self._step_create_dir),
             ("Cloning frontend", self._step_clone_frontend),
             ("Creating root files", self._step_create_root_files),
             ("Customizing frontend", self._step_customize_frontend),
             ("Initializing git", self._step_init_git),
         ]
-
-        with create_progress() as progress:
-            task = progress.add_task("Generating project...", total=len(steps))
-            for description, step_fn in steps:
-                progress.update(task, description=description)
-                result = step_fn()
-                if result is False:
-                    self.cleanup()
-                    return False
-                progress.advance(task)
-
-        return True
 
     def _step_create_dir(self) -> bool:
         return self.create_root_directory()

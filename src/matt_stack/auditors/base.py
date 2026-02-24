@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
@@ -49,6 +50,7 @@ class AuditConfig:
     json_output: bool = False
     fix: bool = False
     base_url: str = "http://localhost:8000"
+    min_severity: Severity | None = None  # None = show all
 
     @property
     def run_all(self) -> bool:
@@ -58,7 +60,7 @@ class AuditConfig:
         return self.run_all or audit_type in (self.audit_types or [])
 
 
-class BaseAuditor:
+class BaseAuditor(ABC):
     """Base class for all auditors."""
 
     audit_type: AuditType
@@ -67,8 +69,9 @@ class BaseAuditor:
         self.config = config
         self.findings: list[AuditFinding] = []
 
+    @abstractmethod
     def run(self) -> list[AuditFinding]:
-        raise NotImplementedError
+        ...
 
     def _rel(self, path: Path) -> Path:
         """Convert absolute path to relative path from project root."""
