@@ -11,7 +11,7 @@ from matt_stack.parsers.utils import SKIP_DIRS
 
 # Patterns to scan for, grouped by severity
 TODO_RE = re.compile(r"#\s*(TODO|FIXME|HACK|XXX)\b", re.IGNORECASE)
-STUB_RE = re.compile(r"^\s+(pass|\.\.\.|\.\.\.|raise NotImplementedError)\s*$", re.MULTILINE)
+STUB_RE = re.compile(r"^\s+(pass|\.\.\.|raise NotImplementedError)\s*$", re.MULTILINE)
 MOCK_RE = re.compile(
     r"\b(mock_|fake_|lorem\s*ipsum|placeholder|hardcoded|localhost:\d+)\b",
     re.IGNORECASE,

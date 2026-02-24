@@ -45,7 +45,7 @@ ROUTER_REG_RE = re.compile(
 
 # Stub patterns: pass, ..., raise NotImplementedError
 STUB_RE = re.compile(
-    r"^\s+(pass|\.\.\.|\.\.\.|raise NotImplementedError)\s*$",
+    r"^\s+(pass|\.\.\.|raise NotImplementedError)\s*$",
     re.MULTILINE,
 )
 

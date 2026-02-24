@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import sys
 
+import typer
+
 from matt_stack.utils.console import console, create_table
 from matt_stack.utils.docker import docker_available, docker_compose_available, docker_running
 from matt_stack.utils.process import check_port_available, command_available, get_command_version
@@ -98,6 +100,7 @@ def run_doctor() -> None:
     else:
         msg = "Some checks failed. Install missing tools before using matt-stack."
         console.print(f"[bold yellow]{msg}[/bold yellow]")
+        raise typer.Exit(code=1)
 
 
 def _status(ok: bool) -> str:

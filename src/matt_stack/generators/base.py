@@ -62,10 +62,14 @@ class BaseGenerator:
             "frontend": ["package.json"],
             "ios": ["Package.swift"],
         }
+        valid = True
         for filename in expected.get(dest_name, []):
             if not (dest / filename).exists():
                 print_warning(f"Expected file '{filename}' not found in cloned {dest_name}")
-        return True
+                valid = False
+        if not valid:
+            print_error(f"Cloned {dest_name} is missing critical files")
+        return valid
 
     def write_file(self, relative_path: str, content: str) -> None:
         """Write a file relative to the project root."""
