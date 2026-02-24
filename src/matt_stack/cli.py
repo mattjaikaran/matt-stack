@@ -23,12 +23,20 @@ def main(
         bool,
         typer.Option("--verbose", "-v", help="Enable verbose output"),
     ] = False,
+    quiet: Annotated[
+        bool,
+        typer.Option("--quiet", "-q", help="Suppress non-essential output"),
+    ] = False,
 ) -> None:
     """Scaffold fullstack monorepos from battle-tested boilerplates."""
     if verbose:
         from matt_stack.utils.console import set_verbose
 
         set_verbose(True)
+    if quiet:
+        from matt_stack.utils.console import set_quiet
+
+        set_quiet(True)
 
 
 @app.command()

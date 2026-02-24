@@ -10,11 +10,17 @@ from rich.table import Table
 console = Console()
 
 _verbose = False
+_quiet = False
 
 
 def set_verbose(enabled: bool) -> None:
     global _verbose
     _verbose = enabled
+
+
+def set_quiet(enabled: bool) -> None:
+    global _quiet
+    _quiet = enabled
 
 
 def print_verbose(message: str) -> None:
@@ -23,14 +29,20 @@ def print_verbose(message: str) -> None:
 
 
 def print_info(message: str) -> None:
+    if _quiet:
+        return
     console.print(f"[blue][INFO][/blue] {message}")
 
 
 def print_success(message: str) -> None:
+    if _quiet:
+        return
     console.print(f"[green][SUCCESS][/green] {message}")
 
 
 def print_warning(message: str) -> None:
+    if _quiet:
+        return
     console.print(f"[yellow][WARNING][/yellow] {message}")
 
 
@@ -39,6 +51,8 @@ def print_error(message: str) -> None:
 
 
 def print_step(step: int, total: int, message: str) -> None:
+    if _quiet:
+        return
     console.print(f"[cyan][{step}/{total}][/cyan] {message}")
 
 
