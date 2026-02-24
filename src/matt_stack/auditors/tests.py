@@ -22,7 +22,7 @@ FEATURE_AREAS = {
 }
 
 
-class TestCoverageAuditor(BaseAuditor):
+class CoverageAuditor(BaseAuditor):
     audit_type = AuditType.TESTS
 
     def run(self) -> list[AuditFinding]:

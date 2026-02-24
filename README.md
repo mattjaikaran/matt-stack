@@ -43,8 +43,13 @@ matt-stack init my-app --preset b2b-fullstack -o ~/projects
 | `matt-stack audit [path]` | Run static analysis on a generated project |
 | `matt-stack doctor` | Check your development environment |
 | `matt-stack info` | Show available presets and source repos |
-| `matt-stack presets` | Alias for `info` |
 | `matt-stack version` | Show version |
+
+### Global Options
+
+| Flag | Description |
+|------|-------------|
+| `--verbose, -v` | Show detailed output for debugging |
 
 ### `init` Options
 
@@ -54,6 +59,7 @@ matt-stack init my-app --preset b2b-fullstack -o ~/projects
 | `--config, -c` | Path to YAML config file |
 | `--ios` | Include iOS client |
 | `--output, -o` | Output directory (default: current) |
+| `--dry-run` | Preview what would be generated without writing files |
 
 ### `audit` Options
 
@@ -61,6 +67,7 @@ matt-stack init my-app --preset b2b-fullstack -o ~/projects
 |------|-------------|
 | `--type, -t` | Audit type(s): `types`, `quality`, `endpoints`, `tests` |
 | `--live` | Enable live endpoint probing (GET only, safe) |
+| `--base-url` | Base URL for live probing (default: `http://localhost:8000`) |
 | `--no-todo` | Skip writing to `tasks/todo.md` |
 | `--json` | Machine-readable JSON output |
 | `--fix` | Auto-remove debug statements (`print()`, `console.log()`) |
@@ -203,7 +210,7 @@ src/matt_stack/
 
 ```bash
 uv sync                        # Install dependencies
-uv run pytest                  # Run tests (48 tests)
+uv run pytest                  # Run tests (176+ tests)
 uv run pytest --cov            # With coverage
 uv run ruff check src/ tests/  # Lint
 uv run ruff format src/ tests/ # Format

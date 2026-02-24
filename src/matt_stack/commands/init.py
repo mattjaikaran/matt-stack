@@ -20,6 +20,7 @@ from matt_stack.generators.frontend_only import FrontendOnlyGenerator
 from matt_stack.generators.fullstack import FullstackGenerator
 from matt_stack.presets import get_preset
 from matt_stack.utils.console import console, print_error, print_success
+from matt_stack.utils.git import get_git_user
 from matt_stack.utils.yaml_config import load_config_file
 
 STYLE = questionary.Style(
@@ -85,25 +86,7 @@ def _run_from_preset(
         print_error("Run 'matt-stack info' to see available presets")
         raise typer.Exit(code=1)
 
-    # Auto-detect author from git config
-    import subprocess
-
-    default_author = ""
-    default_email = ""
-    try:
-        result = subprocess.run(
-            ["git", "config", "user.name"], capture_output=True, text=True, check=True
-        )
-        default_author = result.stdout.strip()
-    except (subprocess.CalledProcessError, FileNotFoundError):
-        pass
-    try:
-        result = subprocess.run(
-            ["git", "config", "user.email"], capture_output=True, text=True, check=True
-        )
-        default_email = result.stdout.strip()
-    except (subprocess.CalledProcessError, FileNotFoundError):
-        pass
+    default_author, default_email = get_git_user()
 
     config = preset.to_config(name, output_dir / name)
     if ios:
@@ -125,25 +108,7 @@ def _run_interactive(
     """Run the interactive wizard."""
     _show_welcome()
 
-    # Auto-detect author from git config
-    import subprocess
-
-    default_author = ""
-    default_email = ""
-    try:
-        result = subprocess.run(
-            ["git", "config", "user.name"], capture_output=True, text=True, check=True
-        )
-        default_author = result.stdout.strip()
-    except (subprocess.CalledProcessError, FileNotFoundError):
-        pass
-    try:
-        result = subprocess.run(
-            ["git", "config", "user.email"], capture_output=True, text=True, check=True
-        )
-        default_email = result.stdout.strip()
-    except (subprocess.CalledProcessError, FileNotFoundError):
-        pass
+    default_author, default_email = get_git_user()
 
     # 1. Project name
     if default_name:

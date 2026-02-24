@@ -53,7 +53,7 @@ src/matt_stack/
 │   ├── types.py        # TypeSafetyAuditor — Pydantic ↔ TS interface/Zod field comparison
 │   ├── quality.py      # CodeQualityAuditor — TODOs, stubs, mock data, debug, credentials
 │   ├── endpoints.py    # EndpointAuditor — duplicate routes, missing auth, stubs, live probing
-│   ├── tests.py        # TestCoverageAuditor — coverage gaps, naming, feature mapping
+│   ├── tests.py        # CoverageAuditor — coverage gaps, naming, feature mapping
 │   └── report.py       # print_report() (Rich table), print_json(), write_todo() (idempotent)
 │
 ├── parsers/

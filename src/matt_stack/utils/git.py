@@ -73,3 +73,24 @@ def create_initial_commit(path: Path, message: str = "Initial commit") -> bool:
     except subprocess.CalledProcessError as e:
         print_error(f"Failed to create initial commit: {e.stderr.strip()}")
         return False
+
+
+def get_git_user() -> tuple[str, str]:
+    """Return (name, email) from git config, falling back to empty strings."""
+    name = ""
+    email = ""
+    try:
+        result = subprocess.run(
+            ["git", "config", "user.name"], capture_output=True, text=True, check=True
+        )
+        name = result.stdout.strip()
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        pass
+    try:
+        result = subprocess.run(
+            ["git", "config", "user.email"], capture_output=True, text=True, check=True
+        )
+        email = result.stdout.strip()
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        pass
+    return name, email

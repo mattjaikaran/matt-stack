@@ -11,7 +11,7 @@ from matt_stack.auditors.base import AuditConfig, AuditReport, AuditType, BaseAu
 from matt_stack.auditors.endpoints import EndpointAuditor
 from matt_stack.auditors.quality import CodeQualityAuditor
 from matt_stack.auditors.report import print_json, print_report, write_todo
-from matt_stack.auditors.tests import TestCoverageAuditor
+from matt_stack.auditors.tests import CoverageAuditor
 from matt_stack.auditors.types import TypeSafetyAuditor
 from matt_stack.utils.console import console, print_error, print_info, print_success, print_warning
 
@@ -19,7 +19,7 @@ AUDITOR_CLASSES: dict[AuditType, type[BaseAuditor]] = {
     AuditType.TYPES: TypeSafetyAuditor,
     AuditType.QUALITY: CodeQualityAuditor,
     AuditType.ENDPOINTS: EndpointAuditor,
-    AuditType.TESTS: TestCoverageAuditor,
+    AuditType.TESTS: CoverageAuditor,
 }
 
 
