@@ -102,3 +102,82 @@ def test_with_ios_and_celery(tmp_path: Path) -> None:
     assert config is not None
     assert config.include_ios is True
     assert config.use_celery is True
+
+
+def test_empty_yaml_file(tmp_path: Path) -> None:
+    f = tmp_path / "config.yaml"
+    f.write_text("")
+    config = load_config_file(f, tmp_path)
+    assert config is None
+
+
+def test_empty_name_value(tmp_path: Path) -> None:
+    f = tmp_path / "config.yaml"
+    f.write_text("name: ''\ntype: fullstack\n")
+    config = load_config_file(f, tmp_path)
+    assert config is None
+
+
+def test_name_only_defaults(tmp_path: Path) -> None:
+    """Minimal config with just a name should use defaults for all other fields."""
+    f = tmp_path / "config.yaml"
+    f.write_text("name: minimal-app\n")
+    config = load_config_file(f, tmp_path)
+    assert config is not None
+    assert config.name == "minimal-app"
+    assert config.project_type.value == "fullstack"
+    assert config.variant.value == "starter"
+
+
+def test_frontend_only_config(tmp_path: Path) -> None:
+    f = tmp_path / "config.yaml"
+    f.write_text("name: my-fe\ntype: frontend-only\nfrontend:\n  framework: react-vite-starter\n")
+    config = load_config_file(f, tmp_path)
+    assert config is not None
+    assert config.project_type.value == "frontend-only"
+    assert config.frontend_framework.value == "react-vite-starter"
+
+
+def test_all_fields_populated(tmp_path: Path) -> None:
+    """Config with every field explicitly set."""
+    f = tmp_path / "config.yaml"
+    f.write_text(
+        "name: full-app\n"
+        "type: fullstack\n"
+        "variant: b2b\n"
+        "ios: true\n"
+        "deployment: railway\n"
+        "author:\n"
+        "  name: Test Author\n"
+        "  email: test@example.com\n"
+        "backend:\n"
+        "  celery: false\n"
+        "  redis: false\n"
+        "frontend:\n"
+        "  framework: react-vite\n"
+    )
+    config = load_config_file(f, tmp_path)
+    assert config is not None
+    assert config.name == "full-app"
+    assert config.variant.value == "b2b"
+    assert config.include_ios is True
+    assert config.deployment.value == "railway"
+    assert config.author_name == "Test Author"
+    assert config.author_email == "test@example.com"
+    assert config.use_celery is False
+
+
+def test_integer_yaml_content(tmp_path: Path) -> None:
+    """YAML that parses to a non-dict type (integer)."""
+    f = tmp_path / "config.yaml"
+    f.write_text("42\n")
+    config = load_config_file(f, tmp_path)
+    assert config is None
+
+
+def test_string_yaml_content(tmp_path: Path) -> None:
+    """YAML that parses to a plain string."""
+    f = tmp_path / "config.yaml"
+    f.write_text("just a string\n")
+    config = load_config_file(f, tmp_path)
+    assert config is None
