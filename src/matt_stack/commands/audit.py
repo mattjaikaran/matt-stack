@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
+import difflib
 from pathlib import Path
+
+import typer
 
 from matt_stack.auditors.base import AuditConfig, AuditReport, AuditType, BaseAuditor
 from matt_stack.auditors.endpoints import EndpointAuditor
@@ -28,13 +31,14 @@ def run_audit(
     no_todo: bool = False,
     json_output: bool = False,
     fix: bool = False,
+    base_url: str = "http://localhost:8000",
 ) -> None:
     """Run audit on a project directory."""
     project_path = path.resolve()
 
     if not project_path.is_dir():
         print_error(f"Not a directory: {project_path}")
-        raise SystemExit(1)
+        raise typer.Exit(code=1)
 
     # Parse audit type strings
     types: list[AuditType] | None = None
@@ -45,8 +49,12 @@ def run_audit(
                 types.append(AuditType(t))
             except ValueError:
                 valid = ", ".join(at.value for at in AuditType)
-                print_error(f"Unknown audit type: '{t}'. Valid: {valid}")
-                raise SystemExit(1) from None
+                suggestion = difflib.get_close_matches(t, [at.value for at in AuditType], n=1)
+                msg = f"Unknown audit type: '{t}'. Valid: {valid}"
+                if suggestion:
+                    msg += f". Did you mean '{suggestion[0]}'?"
+                print_error(msg)
+                raise typer.Exit(code=1) from None
 
     config = AuditConfig(
         project_path=project_path,
@@ -55,12 +63,14 @@ def run_audit(
         write_todo=not no_todo,
         json_output=json_output,
         fix=fix,
+        base_url=base_url,
     )
 
     if not json_output:
         console.print(f"\n[bold cyan]Auditing:[/bold cyan] {project_path}\n")
 
     report = AuditReport()
+    auditor_instances: list[BaseAuditor] = []
 
     # Run each applicable auditor
     for audit_type, auditor_cls in AUDITOR_CLASSES.items():
@@ -74,6 +84,7 @@ def run_audit(
         findings = auditor.run()
         report.findings.extend(findings)
         report.auditors_run.append(audit_type.value)
+        auditor_instances.append(auditor)
 
         if not json_output and findings:
             console.print(f"  Found {len(findings)} issues")
@@ -86,12 +97,14 @@ def run_audit(
 
         # Auto-fix summary
         if fix:
-            for audit_type, auditor_cls in AUDITOR_CLASSES.items():
-                if auditor_cls == CodeQualityAuditor and config.should_run(audit_type):
-                    # Re-check the fix_count from the quality auditor instance
-                    # (we already ran it, so count was tracked)
-                    pass
-            print_info("Auto-fix applied where possible (debug statements removed)")
+            total_fixes = 0
+            for auditor in auditor_instances:
+                if isinstance(auditor, CodeQualityAuditor):
+                    total_fixes += auditor.fix_count
+            if total_fixes:
+                print_info(f"Auto-fix applied: {total_fixes} debug statement(s) removed")
+            else:
+                print_info("No auto-fixable issues found")
 
         # Write to todo.md
         if config.write_todo:

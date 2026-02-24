@@ -6,6 +6,8 @@ import re
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from matt_stack.parsers.utils import extract_block as _extract_block
+
 
 @dataclass
 class TSField:
@@ -44,35 +46,24 @@ def parse_typescript_file(path: Path) -> list[TSInterface]:
     for match in INTERFACE_RE.finditer(text):
         name = match.group(1)
         extends = match.group(2)
-        line_num = text[:match.start()].count("\n") + 1
+        line_num = text[: match.start()].count("\n") + 1
 
         # Find matching closing brace
         brace_start = text.index("{", match.start())
         body = _extract_block(text, brace_start)
 
         fields = _parse_ts_fields(body)
-        interfaces.append(TSInterface(
-            name=name,
-            file=path,
-            line=line_num,
-            fields=fields,
-            extends=extends,
-        ))
+        interfaces.append(
+            TSInterface(
+                name=name,
+                file=path,
+                line=line_num,
+                fields=fields,
+                extends=extends,
+            )
+        )
 
     return interfaces
-
-
-def _extract_block(text: str, open_pos: int) -> str:
-    """Extract content between matching braces."""
-    depth = 0
-    for i in range(open_pos, len(text)):
-        if text[i] == "{":
-            depth += 1
-        elif text[i] == "}":
-            depth -= 1
-            if depth == 0:
-                return text[open_pos + 1 : i]
-    return text[open_pos + 1 :]
 
 
 def _parse_ts_fields(body: str) -> list[TSField]:
@@ -93,21 +84,13 @@ def _parse_ts_fields(body: str) -> list[TSField]:
 
 def find_typescript_type_files(project_path: Path) -> list[Path]:
     """Find TypeScript files likely containing type definitions."""
+    from matt_stack.parsers.utils import find_files
+
     patterns = [
-        "**/types.ts", "**/types/*.ts", "**/types.tsx",
-        "**/interfaces.ts", "**/interfaces/*.ts",
+        "**/types.ts",
+        "**/types/*.ts",
+        "**/types.tsx",
+        "**/interfaces.ts",
+        "**/interfaces/*.ts",
     ]
-    files: list[Path] = []
-    for pattern in patterns:
-        files.extend(project_path.glob(pattern))
-    seen: set[Path] = set()
-    result: list[Path] = []
-    for f in files:
-        if f in seen:
-            continue
-        parts = f.parts
-        if any(p in parts for p in ("node_modules", ".git", "dist", "build")):
-            continue
-        seen.add(f)
-        result.append(f)
-    return sorted(result)
+    return find_files(project_path, patterns)

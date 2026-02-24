@@ -31,9 +31,7 @@ CLASS_RE = re.compile(
 )
 
 # Pattern: field_name: type = default or Field(...)
-FIELD_RE = re.compile(
-    r"^\s{4}(\w+)\s*:\s*(.+?)(?:\s*=\s*(.+))?\s*$", re.MULTILINE
-)
+FIELD_RE = re.compile(r"^\s{2,8}(\w+)\s*:\s*(.+?)(?:\s*=\s*(.+))?\s*$", re.MULTILINE)
 
 # Pattern: Field(min_length=X, max_length=Y, ...) constraints
 CONSTRAINT_RE = re.compile(r"(\w+)\s*=\s*([^,\)]+)")
@@ -51,7 +49,7 @@ def parse_pydantic_file(path: Path) -> list[PydanticSchema]:
     for match in CLASS_RE.finditer(text):
         class_name = match.group(1)
         parent = match.group(2)
-        class_start = text[:match.start()].count("\n") + 1
+        class_start = text[: match.start()].count("\n") + 1
 
         # Find the class body (indented lines after class declaration)
         body_lines: list[str] = []
@@ -64,13 +62,15 @@ def parse_pydantic_file(path: Path) -> list[PydanticSchema]:
         body_text = "\n".join(body_lines)
         fields = _parse_fields(body_text)
 
-        schemas.append(PydanticSchema(
-            name=class_name,
-            file=path,
-            line=class_start,
-            fields=fields,
-            parent=parent,
-        ))
+        schemas.append(
+            PydanticSchema(
+                name=class_name,
+                file=path,
+                line=class_start,
+                fields=fields,
+                parent=parent,
+            )
+        )
 
     return schemas
 
@@ -98,13 +98,15 @@ def _parse_fields(body: str) -> list[PydanticField]:
                 if key not in ("default", "default_factory"):
                     constraints[key] = val
 
-        fields.append(PydanticField(
-            name=name,
-            type_str=_normalize_type(type_str),
-            optional=optional,
-            default=default_val.strip() if default_val else None,
-            constraints=constraints,
-        ))
+        fields.append(
+            PydanticField(
+                name=name,
+                type_str=_normalize_type(type_str),
+                optional=optional,
+                default=default_val.strip() if default_val else None,
+                constraints=constraints,
+            )
+        )
 
     return fields
 
@@ -123,19 +125,7 @@ def _normalize_type(t: str) -> str:
 
 def find_schema_files(project_path: Path) -> list[Path]:
     """Find Python files likely containing Pydantic schemas."""
+    from matt_stack.parsers.utils import find_files
+
     patterns = ["**/schemas.py", "**/schemas/*.py", "**/schema.py", "**/models.py"]
-    files: list[Path] = []
-    for pattern in patterns:
-        files.extend(project_path.glob(pattern))
-    # Deduplicate and filter out venvs/node_modules
-    seen: set[Path] = set()
-    result: list[Path] = []
-    for f in files:
-        if f in seen:
-            continue
-        parts = f.parts
-        if any(p in parts for p in (".venv", "venv", "node_modules", ".git", "__pycache__")):
-            continue
-        seen.add(f)
-        result.append(f)
-    return sorted(result)
+    return find_files(project_path, patterns)

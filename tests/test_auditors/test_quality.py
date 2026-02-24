@@ -54,10 +54,7 @@ def test_skips_test_files_for_mock_data(tmp_path: Path) -> None:
     auditor = CodeQualityAuditor(_make_config(tmp_path))
     findings = auditor.run()
     # mock_ in test files should not be flagged as quality issue (mock), but credential may
-    mock_findings = [
-        f for f in findings
-        if "mock/placeholder" in f.message.lower()
-    ]
+    mock_findings = [f for f in findings if "mock/placeholder" in f.message.lower()]
     assert len(mock_findings) == 0
 
 

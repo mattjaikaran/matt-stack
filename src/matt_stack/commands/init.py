@@ -5,6 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import questionary
+import typer
 from rich.panel import Panel
 from rich.table import Table
 
@@ -21,14 +22,16 @@ from matt_stack.presets import get_preset
 from matt_stack.utils.console import console, print_error, print_success
 from matt_stack.utils.yaml_config import load_config_file
 
-STYLE = questionary.Style([
-    ("qmark", "fg:cyan bold"),
-    ("question", "bold"),
-    ("answer", "fg:cyan bold"),
-    ("pointer", "fg:cyan bold"),
-    ("highlighted", "fg:cyan bold"),
-    ("selected", "fg:cyan"),
-])
+STYLE = questionary.Style(
+    [
+        ("qmark", "fg:cyan bold"),
+        ("question", "bold"),
+        ("answer", "fg:cyan bold"),
+        ("pointer", "fg:cyan bold"),
+        ("highlighted", "fg:cyan bold"),
+        ("selected", "fg:cyan"),
+    ]
+)
 
 
 def run_init(
@@ -37,6 +40,7 @@ def run_init(
     config_file: str | None = None,
     ios: bool = False,
     output_dir: Path | None = None,
+    dry_run: bool = False,
 ) -> None:
     """Main init entry point. Routes to interactive, preset, or config-file mode."""
     if output_dir is None:
@@ -44,46 +48,102 @@ def run_init(
 
     try:
         if config_file:
-            _run_from_config(Path(config_file), output_dir)
+            _run_from_config(Path(config_file), output_dir, dry_run=dry_run)
         elif preset and name:
-            _run_from_preset(name, preset, ios, output_dir)
+            _run_from_preset(name, preset, ios, output_dir, dry_run=dry_run)
         elif name and not preset:
             # Name given but no preset — still run interactive for options
-            _run_interactive(output_dir, default_name=name)
+            _run_interactive(output_dir, default_name=name, dry_run=dry_run)
         else:
-            _run_interactive(output_dir)
+            _run_interactive(output_dir, dry_run=dry_run)
     except KeyboardInterrupt:
         console.print("\n[yellow]Cancelled.[/yellow]")
-        raise SystemExit(130) from None
+        raise typer.Exit(code=130) from None
 
 
-def _run_from_config(config_path: Path, output_dir: Path) -> None:
+def _run_from_config(config_path: Path, output_dir: Path, *, dry_run: bool = False) -> None:
     """Generate from a YAML config file."""
     config = load_config_file(config_path, output_dir)
     if config is None:
-        raise SystemExit(1)
+        raise typer.Exit(code=1)
+    config.dry_run = dry_run
     _generate(config)
 
 
-def _run_from_preset(name: str, preset_name: str, ios: bool, output_dir: Path) -> None:
+def _run_from_preset(
+    name: str,
+    preset_name: str,
+    ios: bool,
+    output_dir: Path,
+    *,
+    dry_run: bool = False,
+) -> None:
     """Generate from a named preset."""
     preset = get_preset(preset_name)
     if preset is None:
         print_error(f"Unknown preset: {preset_name}")
         print_error("Run 'matt-stack info' to see available presets")
-        raise SystemExit(1)
+        raise typer.Exit(code=1)
+
+    # Auto-detect author from git config
+    import subprocess
+
+    default_author = ""
+    default_email = ""
+    try:
+        result = subprocess.run(
+            ["git", "config", "user.name"], capture_output=True, text=True, check=True
+        )
+        default_author = result.stdout.strip()
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        pass
+    try:
+        result = subprocess.run(
+            ["git", "config", "user.email"], capture_output=True, text=True, check=True
+        )
+        default_email = result.stdout.strip()
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        pass
 
     config = preset.to_config(name, output_dir / name)
     if ios:
         config.include_ios = True
+    config.dry_run = dry_run
+    config.author_name = default_author or config.author_name
+    config.author_email = default_email or config.author_email
 
     _show_summary(config)
     _generate(config)
 
 
-def _run_interactive(output_dir: Path, default_name: str | None = None) -> None:
+def _run_interactive(
+    output_dir: Path,
+    default_name: str | None = None,
+    *,
+    dry_run: bool = False,
+) -> None:
     """Run the interactive wizard."""
     _show_welcome()
+
+    # Auto-detect author from git config
+    import subprocess
+
+    default_author = ""
+    default_email = ""
+    try:
+        result = subprocess.run(
+            ["git", "config", "user.name"], capture_output=True, text=True, check=True
+        )
+        default_author = result.stdout.strip()
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        pass
+    try:
+        result = subprocess.run(
+            ["git", "config", "user.email"], capture_output=True, text=True, check=True
+        )
+        default_email = result.stdout.strip()
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        pass
 
     # 1. Project name
     if default_name:
@@ -95,6 +155,12 @@ def _run_interactive(output_dir: Path, default_name: str | None = None) -> None:
         ).ask()
         if not project_name:
             raise KeyboardInterrupt
+
+    from matt_stack.config import normalize_name
+
+    normalized = normalize_name(project_name)
+    if normalized != project_name:
+        console.print(f"  [dim]Normalized to: {normalized}[/dim]")
 
     # 2. Project type
     project_type_choice = questionary.select(
@@ -172,7 +238,10 @@ def _run_interactive(output_dir: Path, default_name: str | None = None) -> None:
         include_ios=include_ios,
         use_celery=use_celery,
         use_redis=use_celery,  # Redis follows Celery
+        author_name=default_author,
+        author_email=default_email,
     )
+    config.dry_run = dry_run
 
     # 7. Summary + confirm
     _show_summary(config)
@@ -224,9 +293,9 @@ def _show_summary(config: ProjectConfig) -> None:
 
 def _generate(config: ProjectConfig) -> bool:
     """Run the appropriate generator."""
-    if config.path.exists():
+    if config.path.exists() and not config.dry_run:
         print_error(f"Directory already exists: {config.path}")
-        raise SystemExit(1)
+        raise typer.Exit(code=1)
 
     generator: FullstackGenerator | BackendOnlyGenerator | FrontendOnlyGenerator
     if config.project_type == ProjectType.FULLSTACK:
@@ -237,7 +306,7 @@ def _generate(config: ProjectConfig) -> bool:
         generator = FrontendOnlyGenerator(config)
     else:
         print_error(f"Unknown project type: {config.project_type}")
-        raise SystemExit(1)
+        raise typer.Exit(code=1)
 
     success = generator.run()
 

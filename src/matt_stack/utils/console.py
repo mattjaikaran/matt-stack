@@ -9,6 +9,18 @@ from rich.table import Table
 
 console = Console()
 
+_verbose = False
+
+
+def set_verbose(enabled: bool) -> None:
+    global _verbose
+    _verbose = enabled
+
+
+def print_verbose(message: str) -> None:
+    if _verbose:
+        console.print(f"[dim][VERBOSE][/dim] {message}")
+
 
 def print_info(message: str) -> None:
     console.print(f"[blue][INFO][/blue] {message}")

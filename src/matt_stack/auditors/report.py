@@ -64,9 +64,7 @@ def print_json(report: AuditReport) -> None:
 def write_todo(report: AuditReport, project_path: Path) -> Path | None:
     """Write/update audit findings to tasks/todo.md (idempotent)."""
     # Only write errors and warnings to todo
-    actionable = [
-        f for f in report.findings if f.severity in (Severity.ERROR, Severity.WARNING)
-    ]
+    actionable = [f for f in report.findings if f.severity in (Severity.ERROR, Severity.WARNING)]
     if not actionable:
         return None
 

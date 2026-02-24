@@ -31,7 +31,9 @@ class TestCoverageAuditor(BaseAuditor):
 
         if not test_files:
             self.add_finding(
-                Severity.WARNING, Path("."), 0,
+                Severity.WARNING,
+                Path("."),
+                0,
                 "No test files found",
                 "Add tests in tests/ (pytest) or __tests__/ (vitest)",
             )
@@ -66,7 +68,9 @@ class TestCoverageAuditor(BaseAuditor):
         return keywords
 
     def _check_schema_coverage(
-        self, project: Path, suites: list[TestSuite],
+        self,
+        project: Path,
+        suites: list[TestSuite],
     ) -> None:
         """Check if Pydantic schemas have corresponding tests."""
         schemas = []
@@ -91,7 +95,8 @@ class TestCoverageAuditor(BaseAuditor):
             if not has_test:
                 self.add_finding(
                     Severity.WARNING,
-                    self._rel(schema.file), schema.line,
+                    self._rel(schema.file),
+                    schema.line,
                     f"No tests found for schema '{schema.name}'",
                     f"Add tests for {schema.name} CRUD and validation",
                 )
@@ -102,7 +107,9 @@ class TestCoverageAuditor(BaseAuditor):
             covered = any(kw in tested_keywords for kw in keywords)
             if not covered:
                 self.add_finding(
-                    Severity.INFO, Path("."), 0,
+                    Severity.INFO,
+                    Path("."),
+                    0,
                     f"No tests cover the '{area}' feature area",
                     f"Add tests for: {', '.join(keywords[:3])}",
                 )
@@ -114,7 +121,8 @@ class TestCoverageAuditor(BaseAuditor):
                 if suite.framework == "pytest" and not tc.name.startswith("test_"):
                     self.add_finding(
                         Severity.INFO,
-                        self._rel(tc.file), tc.line,
+                        self._rel(tc.file),
+                        tc.line,
                         f"Pytest function '{tc.name}' doesn't start with 'test_'",
                         "Prefix test functions with 'test_' for pytest discovery",
                     )
@@ -125,13 +133,8 @@ class TestCoverageAuditor(BaseAuditor):
             if not suite.test_cases:
                 self.add_finding(
                     Severity.WARNING,
-                    self._rel(suite.file), 1,
+                    self._rel(suite.file),
+                    1,
                     f"Empty test file: {self._rel(suite.file)}",
                     "Add test cases or remove the file",
                 )
-
-    def _rel(self, path: Path) -> Path:
-        try:
-            return path.relative_to(self.config.project_path)
-        except ValueError:
-            return path

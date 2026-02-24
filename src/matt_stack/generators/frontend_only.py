@@ -7,7 +7,7 @@ from matt_stack.post_processors.customizer import customize_frontend
 from matt_stack.templates.root_gitignore import generate_gitignore
 from matt_stack.templates.root_makefile import generate_makefile
 from matt_stack.templates.root_readme import generate_readme
-from matt_stack.utils.console import create_progress
+from matt_stack.utils.console import create_progress, print_error
 
 
 class FrontendOnlyGenerator(BaseGenerator):
@@ -28,6 +28,7 @@ class FrontendOnlyGenerator(BaseGenerator):
                 progress.update(task, description=description)
                 result = step_fn()
                 if result is False:
+                    self.cleanup()
                     return False
                 progress.advance(task)
 
@@ -39,13 +40,23 @@ class FrontendOnlyGenerator(BaseGenerator):
     def _step_clone_frontend(self) -> bool:
         return self.clone_and_strip(self.config.frontend_repo_key, "frontend")
 
-    def _step_create_root_files(self) -> None:
-        self.write_file("Makefile", generate_makefile(self.config))
-        self.write_file("README.md", generate_readme(self.config))
-        self.write_file(".gitignore", generate_gitignore(self.config))
+    def _step_create_root_files(self) -> bool:
+        try:
+            self.write_file("Makefile", generate_makefile(self.config))
+            self.write_file("README.md", generate_readme(self.config))
+            self.write_file(".gitignore", generate_gitignore(self.config))
+            return True
+        except OSError as e:
+            print_error(f"Failed to create root files: {e}")
+            return False
 
-    def _step_customize_frontend(self) -> None:
-        customize_frontend(self.config)
+    def _step_customize_frontend(self) -> bool:
+        try:
+            customize_frontend(self.config)
+            return True
+        except Exception as e:
+            print_error(f"Failed to customize frontend: {e}")
+            return False
 
-    def _step_init_git(self) -> None:
-        self.init_git_repository()
+    def _step_init_git(self) -> bool:
+        return self.init_git_repository()

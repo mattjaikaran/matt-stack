@@ -29,8 +29,10 @@ ROUTE_RE = re.compile(
 
 # Alternative: @http_get, @http_post etc.
 HTTP_DECORATOR_RE = re.compile(
-    r"@http_(get|post|put|delete|patch)\s*\(\s*['\"]([^'\"]+)['\"]",
-    re.IGNORECASE,
+    r"@http_(get|post|put|delete|patch)\s*\(\s*['\"]([^'\"]+)['\"]"
+    r"(?:.*?auth\s*=\s*(\w+))?"
+    r"[^)]*\)",
+    re.IGNORECASE | re.DOTALL,
 )
 
 # Function def following a route decorator
@@ -59,18 +61,18 @@ def parse_routes_file(path: Path) -> list[Route]:
         for match in pattern.finditer(text):
             method = match.group(1).upper()
             route_path = match.group(2)
-            line_num = text[:match.start()].count("\n") + 1
+            line_num = text[: match.start()].count("\n") + 1
 
             # Check for auth parameter
             has_auth = False
-            if pattern == ROUTE_RE and match.group(3):
+            if match.lastindex and match.lastindex >= 3 and match.group(3):
                 has_auth = match.group(3).lower() not in ("none", "false")
             elif "auth=" in match.group(0):
                 has_auth = True
 
             # Find the function name (next def after this decorator)
             func_name = "unknown"
-            remaining = text[match.end():]
+            remaining = text[match.end() :]
             func_match = FUNC_DEF_RE.search(remaining)
             if func_match:
                 func_name = func_match.group(1)
@@ -85,39 +87,35 @@ def parse_routes_file(path: Path) -> list[Route]:
                 body_text = "\n".join(body_lines)
                 is_stub = bool(STUB_RE.search(body_text))
 
-            routes.append(Route(
-                method=method,
-                path=route_path,
-                function_name=func_name,
-                file=path,
-                line=line_num,
-                has_auth=has_auth,
-                is_stub=is_stub,
-            ))
+            routes.append(
+                Route(
+                    method=method,
+                    path=route_path,
+                    function_name=func_name,
+                    file=path,
+                    line=line_num,
+                    has_auth=has_auth,
+                    is_stub=is_stub,
+                )
+            )
 
     return routes
 
 
 def find_route_files(project_path: Path) -> list[Path]:
     """Find Python files likely containing route definitions."""
+    from matt_stack.parsers.utils import find_files
+
     patterns = [
-        "**/api.py", "**/api/*.py",
-        "**/routes.py", "**/routes/*.py",
-        "**/controllers.py", "**/controllers/*.py",
-        "**/endpoints.py", "**/endpoints/*.py",
-        "**/views.py", "**/views/*.py",
+        "**/api.py",
+        "**/api/*.py",
+        "**/routes.py",
+        "**/routes/*.py",
+        "**/controllers.py",
+        "**/controllers/*.py",
+        "**/endpoints.py",
+        "**/endpoints/*.py",
+        "**/views.py",
+        "**/views/*.py",
     ]
-    files: list[Path] = []
-    for pattern in patterns:
-        files.extend(project_path.glob(pattern))
-    seen: set[Path] = set()
-    result: list[Path] = []
-    for f in files:
-        if f in seen:
-            continue
-        parts = f.parts
-        if any(p in parts for p in (".venv", "venv", "node_modules", ".git", "__pycache__")):
-            continue
-        seen.add(f)
-        result.append(f)
-    return sorted(result)
+    return find_files(project_path, patterns)

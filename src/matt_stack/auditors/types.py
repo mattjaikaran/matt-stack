@@ -55,7 +55,9 @@ class TypeSafetyAuditor(BaseAuditor):
 
         if not py_schemas:
             self.add_finding(
-                Severity.INFO, Path("."), 0,
+                Severity.INFO,
+                Path("."),
+                0,
                 "No Pydantic schemas found",
                 "Define schemas in */schemas/*.py",
             )
@@ -99,7 +101,8 @@ class TypeSafetyAuditor(BaseAuditor):
             if not ts:
                 self.add_finding(
                     Severity.WARNING,
-                    self._rel(schema.file), schema.line,
+                    self._rel(schema.file),
+                    schema.line,
                     f"Pydantic '{schema.name}' has no matching TS interface",
                     f"Create 'interface {schema.name}' in frontend types",
                 )
@@ -118,9 +121,10 @@ class TypeSafetyAuditor(BaseAuditor):
             if not tf:
                 self.add_finding(
                     Severity.WARNING,
-                    self._rel(ts.file), ts.line,
+                    self._rel(ts.file),
+                    ts.line,
                     f"TS interface '{ts.name}' missing field '{camel}' (from Python '{pf.name}')",
-                    f"Add '{camel}: {self._py_to_ts_type(pf.type_str)}' to {ts.name}",
+                    f"Add '{camel}: {self._py_to_frontend_type(pf.type_str)}' to {ts.name}",
                 )
                 continue
 
@@ -129,7 +133,8 @@ class TypeSafetyAuditor(BaseAuditor):
             if expected_ts_types and not any(t in tf.type_str for t in expected_ts_types):
                 self.add_finding(
                     Severity.WARNING,
-                    self._rel(ts.file), ts.line,
+                    self._rel(ts.file),
+                    ts.line,
                     f"Type mismatch: Python '{py.name}.{pf.name}' is '{pf.type_str}' "
                     f"but TS '{ts.name}.{tf.name}' is '{tf.type_str}'",
                     f"Expected TS type containing one of: {expected_ts_types}",
@@ -139,7 +144,8 @@ class TypeSafetyAuditor(BaseAuditor):
             if pf.optional and not tf.optional:
                 self.add_finding(
                     Severity.INFO,
-                    self._rel(ts.file), ts.line,
+                    self._rel(ts.file),
+                    ts.line,
                     f"Optionality mismatch: '{py.name}.{pf.name}' is optional in Python "
                     f"but required in TS '{ts.name}.{tf.name}'",
                     f"Consider making '{tf.name}' optional with '?'",
@@ -186,10 +192,10 @@ class TypeSafetyAuditor(BaseAuditor):
             if not zf:
                 self.add_finding(
                     Severity.WARNING,
-                    self._rel(zod.file), zod.line,
-                    f"Zod schema '{zod.name}' missing field '{camel}' "
-                    f"(from Python '{pf.name}')",
-                    f"Add '{camel}: z.{self._py_to_zod_type(pf.type_str)}()' to {zod.name}",
+                    self._rel(zod.file),
+                    zod.line,
+                    f"Zod schema '{zod.name}' missing field '{camel}' (from Python '{pf.name}')",
+                    f"Add '{camel}: z.{self._py_to_frontend_type(pf.type_str)}()' to {zod.name}",
                 )
                 continue
 
@@ -197,7 +203,8 @@ class TypeSafetyAuditor(BaseAuditor):
             if "min_length" in pf.constraints and "min" not in zf.constraints:
                 self.add_finding(
                     Severity.INFO,
-                    self._rel(zod.file), zod.line,
+                    self._rel(zod.file),
+                    zod.line,
                     f"Python '{py.name}.{pf.name}' has min_length={pf.constraints['min_length']} "
                     f"but Zod '{zod.name}.{zf.name}' has no .min() constraint",
                     f"Add .min({pf.constraints['min_length']}) to match backend validation",
@@ -206,24 +213,14 @@ class TypeSafetyAuditor(BaseAuditor):
             if "max_length" in pf.constraints and "max" not in zf.constraints:
                 self.add_finding(
                     Severity.INFO,
-                    self._rel(zod.file), zod.line,
+                    self._rel(zod.file),
+                    zod.line,
                     f"Python '{py.name}.{pf.name}' has max_length={pf.constraints['max_length']} "
                     f"but Zod '{zod.name}.{zf.name}' has no .max() constraint",
                     f"Add .max({pf.constraints['max_length']}) to match backend validation",
                 )
 
-    def _rel(self, path: Path) -> Path:
-        try:
-            return path.relative_to(self.config.project_path)
-        except ValueError:
-            return path
-
     @staticmethod
-    def _py_to_ts_type(py_type: str) -> str:
-        mapping = {"str": "string", "int": "number", "float": "number", "bool": "boolean"}
-        return mapping.get(py_type, py_type)
-
-    @staticmethod
-    def _py_to_zod_type(py_type: str) -> str:
+    def _py_to_frontend_type(py_type: str) -> str:
         mapping = {"str": "string", "int": "number", "float": "number", "bool": "boolean"}
         return mapping.get(py_type, py_type)

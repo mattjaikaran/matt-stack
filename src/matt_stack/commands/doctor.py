@@ -8,6 +8,13 @@ from matt_stack.utils.console import console, create_table
 from matt_stack.utils.docker import docker_available, docker_compose_available, docker_running
 from matt_stack.utils.process import check_port_available, command_available, get_command_version
 
+INSTALL_HINTS: dict[str, str] = {
+    "git": "brew install git",
+    "uv": "curl -LsSf https://astral.sh/uv/install.sh | sh",
+    "bun": "curl -fsSL https://bun.sh/install | bash",
+    "make": "xcode-select --install",
+}
+
 
 def run_doctor() -> None:
     """Check all required tools and ports."""
@@ -40,7 +47,12 @@ def run_doctor() -> None:
         version = get_command_version(cmd) or "not found"
         # Take just the first line of version output
         version_short = version.split("\n")[0] if version else "not found"
-        table.add_row(label, _status(available), version_short if available else "not installed")
+        if available:
+            detail = version_short
+        else:
+            hint = INSTALL_HINTS.get(cmd, "")
+            detail = f"not installed — install: {hint}" if hint else "not installed"
+        table.add_row(label, _status(available), detail)
         all_ok &= available
 
     # Docker

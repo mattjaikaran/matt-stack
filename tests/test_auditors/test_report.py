@@ -82,12 +82,14 @@ def test_write_todo_errors_get_x_marker(tmp_path: Path) -> None:
 
 
 def test_report_summary_counts() -> None:
-    report = _make_report([
-        _finding(severity=Severity.ERROR),
-        _finding(severity=Severity.WARNING),
-        _finding(severity=Severity.WARNING),
-        _finding(severity=Severity.INFO),
-    ])
+    report = _make_report(
+        [
+            _finding(severity=Severity.ERROR),
+            _finding(severity=Severity.WARNING),
+            _finding(severity=Severity.WARNING),
+            _finding(severity=Severity.INFO),
+        ]
+    )
     assert report.error_count == 1
     assert report.warning_count == 2
     assert report.info_count == 1

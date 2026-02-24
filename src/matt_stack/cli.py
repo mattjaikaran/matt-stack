@@ -17,6 +17,20 @@ app = typer.Typer(
 )
 
 
+@app.callback()
+def main(
+    verbose: Annotated[
+        bool,
+        typer.Option("--verbose", "-v", help="Enable verbose output"),
+    ] = False,
+) -> None:
+    """Scaffold fullstack monorepos from battle-tested boilerplates."""
+    if verbose:
+        from matt_stack.utils.console import set_verbose
+
+        set_verbose(True)
+
+
 @app.command()
 def init(
     name: Annotated[
@@ -39,11 +53,22 @@ def init(
         Path | None,
         typer.Option("--output", "-o", help="Output directory (default: current)"),
     ] = None,
+    dry_run: Annotated[
+        bool,
+        typer.Option("--dry-run", help="Preview what would be generated without creating files"),
+    ] = False,
 ) -> None:
     """Create a new project from boilerplates."""
     from matt_stack.commands.init import run_init
 
-    run_init(name=name, preset=preset, config_file=config, ios=ios, output_dir=output_dir)
+    run_init(
+        name=name,
+        preset=preset,
+        config_file=config,
+        ios=ios,
+        output_dir=output_dir,
+        dry_run=dry_run,
+    )
 
 
 @app.command()
@@ -62,7 +87,7 @@ def info() -> None:
     run_info()
 
 
-@app.command()
+@app.command(hidden=True)
 def presets() -> None:
     """List available presets (alias for info)."""
     from matt_stack.commands.info import run_info
@@ -96,6 +121,10 @@ def audit(
         bool,
         typer.Option("--fix", help="Auto-remove debug statements"),
     ] = False,
+    base_url: Annotated[
+        str,
+        typer.Option("--base-url", help="Base URL for live endpoint probing"),
+    ] = "http://localhost:8000",
 ) -> None:
     """Run static analysis on a generated project."""
     from matt_stack.commands.audit import run_audit
@@ -107,6 +136,7 @@ def audit(
         no_todo=no_todo,
         json_output=json_output,
         fix=fix,
+        base_url=base_url,
     )
 
 

@@ -20,7 +20,9 @@ class EndpointAuditor(BaseAuditor):
 
         if not routes:
             self.add_finding(
-                Severity.INFO, Path("."), 0,
+                Severity.INFO,
+                Path("."),
+                0,
                 "No route definitions found",
                 "Routes are expected in api.py, routes.py, controllers.py, etc.",
             )
@@ -59,7 +61,8 @@ class EndpointAuditor(BaseAuditor):
                 files = ", ".join(f"{self._rel(r.file)}:{r.line}" for r in dupes)
                 self.add_finding(
                     Severity.ERROR,
-                    self._rel(dupes[0].file), dupes[0].line,
+                    self._rel(dupes[0].file),
+                    dupes[0].line,
                     f"Duplicate route: {method} {path} defined {count} times ({files})",
                     "Remove duplicate or use unique paths",
                 )
@@ -70,7 +73,8 @@ class EndpointAuditor(BaseAuditor):
             if r.is_stub:
                 self.add_finding(
                     Severity.WARNING,
-                    self._rel(r.file), r.line,
+                    self._rel(r.file),
+                    r.line,
                     f"Stub endpoint: {r.method} {r.path} ({r.function_name})",
                     "Implement the endpoint handler",
                 )
@@ -82,7 +86,8 @@ class EndpointAuditor(BaseAuditor):
             if r.method in write_methods and not r.has_auth:
                 self.add_finding(
                     Severity.WARNING,
-                    self._rel(r.file), r.line,
+                    self._rel(r.file),
+                    r.line,
                     f"No auth on write endpoint: {r.method} {r.path}",
                     "Add auth=... parameter to protect write operations",
                 )
@@ -94,7 +99,8 @@ class EndpointAuditor(BaseAuditor):
             if not r.path.startswith("/"):
                 self.add_finding(
                     Severity.INFO,
-                    self._rel(r.file), r.line,
+                    self._rel(r.file),
+                    r.line,
                     f"Route path missing leading slash: '{r.path}'",
                     f"Use '/{r.path}' for consistency",
                 )
@@ -103,14 +109,15 @@ class EndpointAuditor(BaseAuditor):
             if r.path != "/" and r.path.endswith("/"):
                 self.add_finding(
                     Severity.INFO,
-                    self._rel(r.file), r.line,
+                    self._rel(r.file),
+                    r.line,
                     f"Trailing slash on route: '{r.path}'",
                     "Consider removing trailing slash for consistency",
                 )
 
     def _live_probe(self, routes: list[Route]) -> None:
         """GET-probe discovered endpoints (safe, read-only)."""
-        base_url = "http://localhost:8000"
+        base_url = self.config.base_url
 
         for r in routes:
             if r.method != "GET":
@@ -128,7 +135,8 @@ class EndpointAuditor(BaseAuditor):
                     if status >= 500:
                         self.add_finding(
                             Severity.ERROR,
-                            self._rel(r.file), r.line,
+                            self._rel(r.file),
+                            r.line,
                             f"Live probe {r.method} {r.path} returned {status}",
                             "Check server logs for the error",
                         )
@@ -136,28 +144,26 @@ class EndpointAuditor(BaseAuditor):
                 if e.code >= 500:
                     self.add_finding(
                         Severity.ERROR,
-                        self._rel(r.file), r.line,
+                        self._rel(r.file),
+                        r.line,
                         f"Live probe {r.method} {r.path} returned {e.code}",
                         "Check server logs for the error",
                     )
                 elif e.code == 404:
                     self.add_finding(
                         Severity.WARNING,
-                        self._rel(r.file), r.line,
+                        self._rel(r.file),
+                        r.line,
                         f"Live probe {r.method} {r.path} returned 404",
                         "Route may not be registered or server isn't running",
                     )
             except (urllib.error.URLError, TimeoutError, OSError):
                 # Server not running or not reachable — skip silently
                 self.add_finding(
-                    Severity.INFO, Path("."), 0,
+                    Severity.INFO,
+                    Path("."),
+                    0,
                     f"Could not reach {base_url} — is the server running?",
                     "Start the backend with 'make backend-dev' before using --live",
                 )
                 break  # No point probing more
-
-    def _rel(self, path: Path) -> Path:
-        try:
-            return path.relative_to(self.config.project_path)
-        except ValueError:
-            return path

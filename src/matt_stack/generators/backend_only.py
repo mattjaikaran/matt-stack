@@ -12,7 +12,7 @@ from matt_stack.templates.root_env import generate_env_example
 from matt_stack.templates.root_gitignore import generate_gitignore
 from matt_stack.templates.root_makefile import generate_makefile
 from matt_stack.templates.root_readme import generate_readme
-from matt_stack.utils.console import create_progress
+from matt_stack.utils.console import create_progress, print_error
 
 
 class BackendOnlyGenerator(BaseGenerator):
@@ -34,6 +34,7 @@ class BackendOnlyGenerator(BaseGenerator):
                 progress.update(task, description=description)
                 result = step_fn()
                 if result is False:
+                    self.cleanup()
                     return False
                 progress.advance(task)
 
@@ -45,23 +46,34 @@ class BackendOnlyGenerator(BaseGenerator):
     def _step_clone_backend(self) -> bool:
         return self.clone_and_strip(self.config.backend_repo_key, "backend")
 
-    def _step_create_root_files(self) -> None:
-        self.write_file("Makefile", generate_makefile(self.config))
-        self.write_file("docker-compose.yml", generate_docker_compose(self.config))
-        self.write_file("docker-compose.prod.yml", generate_docker_compose_prod(self.config))
-        self.write_file(".env.example", generate_env_example(self.config))
-        self.write_file(".env", generate_env_example(self.config))
-        self.write_file("README.md", generate_readme(self.config))
-        self.write_file("CLAUDE.md", generate_claude_md(self.config))
-        self.write_file(".gitignore", generate_gitignore(self.config))
-        self.write_file("tasks/todo.md", f"# {self.config.display_name} TODO\n")
+    def _step_create_root_files(self) -> bool:
+        try:
+            self.write_file("Makefile", generate_makefile(self.config))
+            self.write_file("docker-compose.yml", generate_docker_compose(self.config))
+            self.write_file("docker-compose.prod.yml", generate_docker_compose_prod(self.config))
+            self.write_file(".env.example", generate_env_example(self.config))
+            self.write_file(".env", generate_env_example(self.config))
+            self.write_file("README.md", generate_readme(self.config))
+            self.write_file("CLAUDE.md", generate_claude_md(self.config))
+            self.write_file(".gitignore", generate_gitignore(self.config))
+            self.write_file("tasks/todo.md", f"# {self.config.display_name} TODO\n")
+            return True
+        except OSError as e:
+            print_error(f"Failed to create root files: {e}")
+            return False
 
-    def _step_customize_backend(self) -> None:
-        customize_backend(self.config)
+    def _step_customize_backend(self) -> bool:
+        try:
+            customize_backend(self.config)
+            return True
+        except Exception as e:
+            print_error(f"Failed to customize backend: {e}")
+            return False
 
-    def _step_init_git(self) -> None:
-        self.init_git_repository()
+    def _step_init_git(self) -> bool:
+        return self.init_git_repository()
 
-    def _step_finish(self) -> None:
+    def _step_finish(self) -> bool:
         if self.config.is_b2b:
             print_b2b_instructions(self.config)
+        return True

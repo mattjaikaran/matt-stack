@@ -48,6 +48,7 @@ class AuditConfig:
     write_todo: bool = True
     json_output: bool = False
     fix: bool = False
+    base_url: str = "http://localhost:8000"
 
     @property
     def run_all(self) -> bool:
@@ -69,6 +70,13 @@ class BaseAuditor:
     def run(self) -> list[AuditFinding]:
         raise NotImplementedError
 
+    def _rel(self, path: Path) -> Path:
+        """Convert absolute path to relative path from project root."""
+        try:
+            return path.relative_to(self.config.project_path)
+        except ValueError:
+            return path
+
     def add_finding(
         self,
         severity: Severity,
@@ -77,14 +85,16 @@ class BaseAuditor:
         message: str,
         suggestion: str = "",
     ) -> None:
-        self.findings.append(AuditFinding(
-            category=self.audit_type,
-            severity=severity,
-            file=file,
-            line=line,
-            message=message,
-            suggestion=suggestion,
-        ))
+        self.findings.append(
+            AuditFinding(
+                category=self.audit_type,
+                severity=severity,
+                file=file,
+                line=line,
+                message=message,
+                suggestion=suggestion,
+            )
+        )
 
     @property
     def error_count(self) -> int:

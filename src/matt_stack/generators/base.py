@@ -8,7 +8,7 @@ import shutil
 from pathlib import Path
 
 from matt_stack.config import REPO_URLS, ProjectConfig
-from matt_stack.utils.console import print_error, print_success
+from matt_stack.utils.console import print_error, print_info, print_success, print_warning
 from matt_stack.utils.git import (
     clone_repo,
     create_initial_commit,
@@ -26,6 +26,9 @@ class BaseGenerator:
 
     def create_root_directory(self) -> bool:
         """Create the project root directory."""
+        if self.config.dry_run:
+            print_info(f"[dry-run] Would create directory: {self.config.path}")
+            return True
         try:
             self.config.path.mkdir(parents=True, exist_ok=False)
             print_success(f"Created directory: {self.config.path}")
@@ -36,6 +39,10 @@ class BaseGenerator:
 
     def clone_and_strip(self, repo_key: str, dest_name: str) -> bool:
         """Clone a repo and strip its .git history."""
+        if self.config.dry_run:
+            url = REPO_URLS[repo_key]
+            print_info(f"[dry-run] Would clone {url} into {dest_name}/")
+            return True
         url = REPO_URLS[repo_key]
         dest = self.config.path / dest_name
         if not clone_repo(url, dest):
@@ -45,22 +52,46 @@ class BaseGenerator:
         cli_dir = dest / "cli"
         if cli_dir.exists():
             shutil.rmtree(cli_dir)
+        # Validate cloned contents have expected files
+        return self._validate_clone(dest, dest_name)
+
+    def _validate_clone(self, dest: Path, dest_name: str) -> bool:
+        """Verify cloned repo contains expected files."""
+        expected: dict[str, list[str]] = {
+            "backend": ["pyproject.toml"],
+            "frontend": ["package.json"],
+            "ios": ["Package.swift"],
+        }
+        for filename in expected.get(dest_name, []):
+            if not (dest / filename).exists():
+                print_warning(f"Expected file '{filename}' not found in cloned {dest_name}")
         return True
 
     def write_file(self, relative_path: str, content: str) -> None:
         """Write a file relative to the project root."""
+        if self.config.dry_run:
+            print_info(f"[dry-run] Would create {relative_path}")
+            return
         file_path = self.config.path / relative_path
         file_path.parent.mkdir(parents=True, exist_ok=True)
         file_path.write_text(content)
         self.created_files.append(file_path)
 
-    def update_file(self, file_path: Path, replacements: dict[str, str]) -> None:
+    def update_file(
+        self,
+        file_path: Path,
+        replacements: dict[str, str],
+        *,
+        warn_on_miss: bool = False,
+    ) -> None:
         """Apply string replacements to a file."""
         if not file_path.exists():
             print_error(f"File not found: {file_path}")
             return
         content = file_path.read_text()
         for old, new in replacements.items():
+            if warn_on_miss and old not in content:
+                print_warning(f"Pattern not found in {file_path.name}: '{old[:50]}'")
             content = content.replace(old, new)
         file_path.write_text(content)
 
@@ -78,16 +109,35 @@ class BaseGenerator:
         if not file_path.exists():
             print_error(f"File not found: {file_path}")
             return
-        data = json.loads(file_path.read_text())
+        try:
+            data = json.loads(file_path.read_text())
+        except json.JSONDecodeError as e:
+            print_error(f"Malformed JSON in {file_path.name}: {e}")
+            return
         data.update(updates)
         file_path.write_text(json.dumps(data, indent=2) + "\n")
 
-    def init_git_repository(self) -> None:
+    def init_git_repository(self) -> bool:
         """Initialize a fresh git repo with initial commit."""
-        if self.config.init_git:
-            init_repo(self.config.path)
-            create_initial_commit(self.config.path)
-            print_success("Initialized git repository")
+        if self.config.dry_run:
+            print_info("[dry-run] Would initialize git repository")
+            return True
+        if not self.config.init_git:
+            return True
+        if not init_repo(self.config.path):
+            print_error("Failed to initialize git repository")
+            return False
+        if not create_initial_commit(self.config.path):
+            print_warning("Git repo initialized but initial commit failed")
+            return True  # Non-fatal
+        print_success("Initialized git repository")
+        return True
+
+    def cleanup(self) -> None:
+        """Remove the project directory on failure."""
+        if self.config.path.exists():
+            shutil.rmtree(self.config.path, ignore_errors=True)
+            print_warning(f"Cleaned up partial project: {self.config.path}")
 
     def run(self) -> bool:
         """Generate the project. Must be implemented by subclasses."""

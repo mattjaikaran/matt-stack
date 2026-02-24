@@ -6,6 +6,8 @@ import re
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from matt_stack.parsers.utils import extract_block as _extract_block
+
 
 @dataclass
 class ZodField:
@@ -49,38 +51,38 @@ def parse_zod_file(path: Path) -> list[ZodSchema]:
 
     for match in ZOD_SCHEMA_RE.finditer(text):
         name = match.group(1)
-        line_num = text[:match.start()].count("\n") + 1
+        line_num = text[: match.start()].count("\n") + 1
 
         # Find the opening brace of z.object({
         brace_pos = text.index("{", match.start() + len(match.group(0)) - 1)
         body = _extract_block(text, brace_pos)
 
         fields = _parse_zod_fields(body)
-        schemas.append(ZodSchema(
-            name=name,
-            file=path,
-            line=line_num,
-            fields=fields,
-        ))
+        schemas.append(
+            ZodSchema(
+                name=name,
+                file=path,
+                line=line_num,
+                fields=fields,
+            )
+        )
 
     return schemas
 
 
-def _extract_block(text: str, open_pos: int) -> str:
-    """Extract content between matching braces."""
-    depth = 0
-    for i in range(open_pos, len(text)):
-        if text[i] == "{":
-            depth += 1
-        elif text[i] == "}":
-            depth -= 1
-            if depth == 0:
-                return text[open_pos + 1 : i]
-    return text[open_pos + 1 :]
-
-
 def _parse_zod_fields(body: str) -> list[ZodField]:
     """Extract fields from a z.object body."""
+    # Join continuation lines (lines starting with . after stripping)
+    lines = body.split("\n")
+    joined_lines: list[str] = []
+    for line in lines:
+        stripped = line.strip()
+        if stripped.startswith(".") and joined_lines:
+            joined_lines[-1] = joined_lines[-1].rstrip().rstrip(",") + stripped
+        else:
+            joined_lines.append(line)
+    body = "\n".join(joined_lines)
+
     fields: list[ZodField] = []
     for match in ZOD_FIELD_RE.finditer(body):
         name = match.group(1)
@@ -105,33 +107,27 @@ def _parse_zod_fields(body: str) -> list[ZodField]:
             elif method not in (type_str,):  # Skip the base type call
                 constraints[method] = arg if arg else "true"
 
-        fields.append(ZodField(
-            name=name,
-            type_str=type_str,
-            optional=optional,
-            constraints=constraints,
-        ))
+        fields.append(
+            ZodField(
+                name=name,
+                type_str=type_str,
+                optional=optional,
+                constraints=constraints,
+            )
+        )
     return fields
 
 
 def find_zod_files(project_path: Path) -> list[Path]:
     """Find TypeScript files likely containing Zod schemas."""
+    from matt_stack.parsers.utils import find_files
+
     patterns = [
-        "**/schemas.ts", "**/schemas/*.ts",
-        "**/forms/**/*.tsx", "**/forms/**/*.ts",
-        "**/validation.ts", "**/validators.ts",
+        "**/schemas.ts",
+        "**/schemas/*.ts",
+        "**/forms/**/*.tsx",
+        "**/forms/**/*.ts",
+        "**/validation.ts",
+        "**/validators.ts",
     ]
-    files: list[Path] = []
-    for pattern in patterns:
-        files.extend(project_path.glob(pattern))
-    seen: set[Path] = set()
-    result: list[Path] = []
-    for f in files:
-        if f in seen:
-            continue
-        parts = f.parts
-        if any(p in parts for p in ("node_modules", ".git", "dist", "build")):
-            continue
-        seen.add(f)
-        result.append(f)
-    return sorted(result)
+    return find_files(project_path, patterns)

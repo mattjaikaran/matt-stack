@@ -92,9 +92,7 @@ def _api_dev_service(config: ProjectConfig) -> str:
     ]
     if config.use_redis:
         env_lines.append("      REDIS_URL=redis://redis:6379/0")
-    env_lines.append(
-        "      CORS_ALLOWED_ORIGINS=http://localhost:3000,http://localhost:5173"
-    )
+    env_lines.append("      CORS_ALLOWED_ORIGINS=http://localhost:3000,http://localhost:5173")
 
     env_block = "\n".join(env_lines)
 

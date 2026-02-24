@@ -3,23 +3,8 @@
 from __future__ import annotations
 
 import shutil
+import socket
 import subprocess
-from pathlib import Path
-
-
-def run_command(
-    args: list[str],
-    cwd: Path | None = None,
-    capture: bool = True,
-) -> subprocess.CompletedProcess[str]:
-    """Run a command and return the result."""
-    return subprocess.run(
-        args,
-        cwd=cwd,
-        capture_output=capture,
-        text=True,
-        check=True,
-    )
 
 
 def command_available(name: str) -> bool:
@@ -29,8 +14,6 @@ def command_available(name: str) -> bool:
 
 def check_port_available(port: int) -> bool:
     """Check if a TCP port is available."""
-    import socket
-
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         try:
             s.bind(("127.0.0.1", port))

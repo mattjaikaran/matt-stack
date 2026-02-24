@@ -67,14 +67,24 @@ class ProjectConfig:
     use_redis: bool = True
     deployment: DeploymentTarget = DeploymentTarget.DOCKER
     init_git: bool = True
-    author_name: str = "Matt Jaikaran"
-    author_email: str = "info@mattjaikaran.com"
+    author_name: str = ""
+    author_email: str = ""
     dry_run: bool = False
 
     def __post_init__(self) -> None:
         self.name = normalize_name(self.name)
+        if not self.name:
+            raise ValueError("Project name cannot be empty")
         if isinstance(self.path, str):
             self.path = Path(self.path)
+        # Frontend-only projects don't need backend features
+        if self.project_type == ProjectType.FRONTEND_ONLY:
+            self.use_celery = False
+            self.use_redis = False
+            self.include_ios = False
+        # Celery requires Redis
+        if self.use_celery and not self.use_redis:
+            self.use_redis = True
 
     @property
     def python_package_name(self) -> str:
