@@ -7,13 +7,19 @@ from pathlib import Path
 
 import typer
 
-from matt_stack.auditors.base import AuditConfig, AuditReport, AuditType, BaseAuditor
+from matt_stack.auditors.base import AuditConfig, AuditReport, AuditType, BaseAuditor, Severity
 from matt_stack.auditors.endpoints import EndpointAuditor
 from matt_stack.auditors.quality import CodeQualityAuditor
 from matt_stack.auditors.report import print_json, print_report, write_todo
 from matt_stack.auditors.tests import CoverageAuditor
 from matt_stack.auditors.types import TypeSafetyAuditor
 from matt_stack.utils.console import console, print_error, print_info, print_success, print_warning
+
+SEVERITY_ORDER: dict[Severity, int] = {
+    Severity.INFO: 0,
+    Severity.WARNING: 1,
+    Severity.ERROR: 2,
+}
 
 AUDITOR_CLASSES: dict[AuditType, type[BaseAuditor]] = {
     AuditType.TYPES: TypeSafetyAuditor,
@@ -32,6 +38,7 @@ def run_audit(
     json_output: bool = False,
     fix: bool = False,
     base_url: str = "http://localhost:8000",
+    min_severity: str | None = None,
 ) -> None:
     """Run audit on a project directory."""
     project_path = path.resolve()
@@ -56,6 +63,20 @@ def run_audit(
                 print_error(msg)
                 raise typer.Exit(code=1) from None
 
+    # Parse min severity string
+    parsed_severity: Severity | None = None
+    if min_severity:
+        try:
+            parsed_severity = Severity(min_severity)
+        except ValueError:
+            valid = ", ".join(s.value for s in Severity)
+            suggestion = difflib.get_close_matches(min_severity, [s.value for s in Severity], n=1)
+            msg = f"Unknown severity: '{min_severity}'. Valid: {valid}"
+            if suggestion:
+                msg += f". Did you mean '{suggestion[0]}'?"
+            print_error(msg)
+            raise typer.Exit(code=1) from None
+
     config = AuditConfig(
         project_path=project_path,
         audit_types=types,
@@ -64,6 +85,7 @@ def run_audit(
         json_output=json_output,
         fix=fix,
         base_url=base_url,
+        min_severity=parsed_severity,
     )
 
     if not json_output:
@@ -88,6 +110,13 @@ def run_audit(
 
         if not json_output and findings:
             console.print(f"  Found {len(findings)} issues")
+
+    # Filter findings by minimum severity
+    if config.min_severity is not None:
+        min_order = SEVERITY_ORDER[config.min_severity]
+        report.findings = [
+            f for f in report.findings if SEVERITY_ORDER[f.severity] >= min_order
+        ]
 
     # Output results
     if json_output:

@@ -125,6 +125,10 @@ def audit(
         str,
         typer.Option("--base-url", help="Base URL for live endpoint probing"),
     ] = "http://localhost:8000",
+    severity: Annotated[
+        str | None,
+        typer.Option("--severity", "-s", help="Minimum severity: error, warning, info"),
+    ] = None,
 ) -> None:
     """Run static analysis on a generated project."""
     from matt_stack.commands.audit import run_audit
@@ -137,6 +141,7 @@ def audit(
         json_output=json_output,
         fix=fix,
         base_url=base_url,
+        min_severity=severity,
     )
 
 
