@@ -61,9 +61,28 @@
 - [x] README.md — full rewrite with audit docs
 - [x] CLAUDE.md — expanded with file map, patterns, workflows
 
-## Future
-- [ ] YAML config mode E2E test
-- [ ] iOS generator customization (rename MyApp references)
+## Phase 8: Codebase Improvements (completed)
+- [x] Fix STUB_RE duplicate regex, doctor exit code, _validate_clone return value
+- [x] Refactor generators to ABC base class with shared run() loop
+- [x] Add --severity/-s filter to audit command
+- [x] Make extract_block string-aware for TS/Zod parsing
+- [x] Document DeploymentTarget enum as partially implemented
+- [x] Add --quiet/-q flag for CI-friendly output
+- [x] Add 25 tests for post-processors, iOS, docker utils, yaml edge cases (227 total)
+
+## Phase 9: Tier 1 — Game-Changers
+- [ ] `matt-stack add` — expand existing projects in-place (add frontend/backend/ios)
 - [ ] `matt-stack upgrade` — pull latest boilerplate changes into existing project
-- [ ] `matt-stack add` — add iOS/frontend/backend to existing project
-- [ ] Plugin system for custom auditors
+- [ ] Deployment target scaffolding (Railway, Render, Vercel configs)
+
+## Phase 10: Tier 2 — High-Value Polish
+- [ ] Conditional template cleanup — make all templates 100% conditional on feature flags
+- [ ] Dependency/version compatibility auditor (pyproject.toml + package.json)
+- [ ] Pre-commit hooks auto-setup (.pre-commit-config.yaml with ruff + prettier)
+
+## Phase 11: Tier 3 — Differentiators
+- [ ] Audit HTML dashboard export (browsable report, inline CSS/JS)
+- [ ] Plugin system for custom auditors (load from ./matt-stack-plugins/)
+- [ ] docker-compose.override.yml template for per-developer customization
+- [ ] iOS generator customization (rename MyApp references)
+- [ ] YAML config mode E2E test
