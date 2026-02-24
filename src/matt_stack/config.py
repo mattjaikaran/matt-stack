@@ -24,6 +24,8 @@ class FrontendFramework(str, Enum):
     REACT_VITE_STARTER = "react-vite-starter"
 
 
+# NOTE: Currently only DOCKER is fully implemented. RAILWAY and RENDER are
+# reserved for future deployment target support in generators.
 class DeploymentTarget(str, Enum):
     DOCKER = "docker"
     RAILWAY = "railway"
