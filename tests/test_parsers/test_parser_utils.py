@@ -67,3 +67,29 @@ def test_extract_block_unclosed() -> None:
     text = "{ hello world"
     result = extract_block(text, 0)
     assert "hello world" in result
+
+
+def test_extract_block_ignores_braces_in_double_quotes() -> None:
+    text = '{ name: "hello { world }" }'
+    result = extract_block(text, 0)
+    assert result == ' name: "hello { world }" '
+
+
+def test_extract_block_ignores_braces_in_single_quotes() -> None:
+    text = "{ name: 'hello { world }' }"
+    result = extract_block(text, 0)
+    assert result == " name: 'hello { world }' "
+
+
+def test_extract_block_ignores_braces_in_template_literals() -> None:
+    text = "{ name: `hello ${ world }` }"
+    result = extract_block(text, 0)
+    assert result == " name: `hello ${ world }` "
+
+
+def test_extract_block_escaped_quotes_dont_end_string() -> None:
+    text = r'{ name: "escaped \" { brace }" }'
+    result = extract_block(text, 0)
+    assert r'name: "escaped \" { brace }"' in result
+    # The block should close at the final }, not at the brace inside the string
+    assert result.strip().endswith(r'"escaped \" { brace }"')

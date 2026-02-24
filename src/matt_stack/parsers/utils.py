@@ -36,13 +36,26 @@ def find_files(project_path: Path, patterns: list[str]) -> list[Path]:
 
 
 def extract_block(text: str, open_pos: int) -> str:
-    """Extract content between matching braces."""
+    """Extract content between matching braces, ignoring braces in strings."""
     depth = 0
-    for i in range(open_pos, len(text)):
-        if text[i] == "{":
-            depth += 1
-        elif text[i] == "}":
-            depth -= 1
-            if depth == 0:
-                return text[open_pos + 1 : i]
+    in_string: str | None = None  # None, "'", '"', or "`"
+    i = open_pos
+    while i < len(text):
+        ch = text[i]
+        if in_string:
+            if ch == "\\" and i + 1 < len(text):
+                i += 2  # skip escaped character
+                continue
+            if ch == in_string:
+                in_string = None
+        else:
+            if ch in ("'", '"', "`"):
+                in_string = ch
+            elif ch == "{":
+                depth += 1
+            elif ch == "}":
+                depth -= 1
+                if depth == 0:
+                    return text[open_pos + 1 : i]
+        i += 1
     return text[open_pos + 1 :]
