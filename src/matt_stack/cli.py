@@ -199,6 +199,10 @@ def audit(
         str | None,
         typer.Option("--severity", "-s", help="Minimum severity: error, warning, info"),
     ] = None,
+    html: Annotated[
+        bool,
+        typer.Option("--html", help="Generate HTML dashboard report"),
+    ] = False,
 ) -> None:
     """Run static analysis on a generated project."""
     from matt_stack.commands.audit import run_audit
@@ -212,6 +216,7 @@ def audit(
         fix=fix,
         base_url=base_url,
         min_severity=severity,
+        html_output=html,
     )
 
 

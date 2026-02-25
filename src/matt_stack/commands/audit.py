@@ -39,6 +39,7 @@ def run_audit(
     fix: bool = False,
     base_url: str = "http://localhost:8000",
     min_severity: str | None = None,
+    html_output: bool = False,
 ) -> None:
     """Run audit on a project directory."""
     project_path = path.resolve()
@@ -114,9 +115,7 @@ def run_audit(
     # Filter findings by minimum severity
     if config.min_severity is not None:
         min_order = SEVERITY_ORDER[config.min_severity]
-        report.findings = [
-            f for f in report.findings if SEVERITY_ORDER[f.severity] >= min_order
-        ]
+        report.findings = [f for f in report.findings if SEVERITY_ORDER[f.severity] >= min_order]
 
     # Output results
     if json_output:
@@ -142,6 +141,15 @@ def run_audit(
                 print_success(f"Wrote findings to {todo_path}")
             elif report.findings:
                 print_info("No actionable findings to write to todo.md")
+
+        # HTML dashboard
+        if html_output:
+            from matt_stack.auditors.html_report import generate_html_report
+
+            html_content = generate_html_report(report, project_path)
+            html_path = project_path / "audit-report.html"
+            html_path.write_text(html_content, encoding="utf-8")
+            print_success(f"HTML report written to {html_path}")
 
         # Exit summary
         if report.error_count:
