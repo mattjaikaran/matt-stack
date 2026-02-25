@@ -75,14 +75,14 @@
 - [x] `matt-stack upgrade` — pull latest boilerplate changes into existing project
 - [x] Deployment target scaffolding (Railway, Render, Vercel configs)
 
-## Phase 10: Tier 2 — High-Value Polish
-- [ ] Conditional template cleanup — make all templates 100% conditional on feature flags
-- [ ] Dependency/version compatibility auditor (pyproject.toml + package.json)
-- [ ] Pre-commit hooks auto-setup (.pre-commit-config.yaml with ruff + prettier)
+## Phase 10: Tier 2 — High-Value Polish (completed)
+- [x] Conditional template cleanup — templates 100% conditional on feature flags
+- [x] Dependency/version compatibility auditor (pyproject.toml + package.json)
+- [x] Pre-commit hooks auto-setup (.pre-commit-config.yaml with ruff + prettier)
 
-## Phase 11: Tier 3 — Differentiators
-- [ ] Audit HTML dashboard export (browsable report, inline CSS/JS)
-- [ ] Plugin system for custom auditors (load from ./matt-stack-plugins/)
-- [ ] docker-compose.override.yml template for per-developer customization
-- [ ] iOS generator customization (rename MyApp references)
-- [ ] YAML config mode E2E test
+## Phase 11: Tier 3 — Differentiators (completed)
+- [x] Audit HTML dashboard export (`--html` flag, browsable report, inline CSS/JS)
+- [x] Plugin system for custom auditors (load from ./matt-stack-plugins/)
+- [x] docker-compose.override.yml template for per-developer customization
+- [x] iOS generator customization (rename MyApp references)
+- [x] YAML config mode E2E test (8 tests covering all config paths)
