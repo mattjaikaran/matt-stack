@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 
+from matt_stack.config import DeploymentTarget
 from matt_stack.generators.base import BaseGenerator
 from matt_stack.post_processors.b2b import print_b2b_instructions
 from matt_stack.post_processors.customizer import customize_backend
@@ -48,6 +49,21 @@ class BackendOnlyGenerator(BaseGenerator):
             self.write_file("CLAUDE.md", generate_claude_md(self.config))
             self.write_file(".gitignore", generate_gitignore(self.config))
             self.write_file("tasks/todo.md", f"# {self.config.display_name} TODO\n")
+
+            # Deployment configs
+            if self.config.deployment == DeploymentTarget.RAILWAY:
+                from matt_stack.templates.deploy_railway import (
+                    generate_railway_json,
+                    generate_railway_toml,
+                )
+
+                self.write_file("railway.json", generate_railway_json(self.config))
+                self.write_file("railway.toml", generate_railway_toml(self.config))
+            elif self.config.deployment == DeploymentTarget.RENDER:
+                from matt_stack.templates.deploy_render import generate_render_yaml
+
+                self.write_file("render.yaml", generate_render_yaml(self.config))
+
             return True
         except OSError as e:
             print_error(f"Failed to create root files: {e}")

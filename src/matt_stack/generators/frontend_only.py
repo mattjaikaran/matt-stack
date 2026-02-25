@@ -36,6 +36,12 @@ class FrontendOnlyGenerator(BaseGenerator):
             self.write_file("Makefile", generate_makefile(self.config))
             self.write_file("README.md", generate_readme(self.config))
             self.write_file(".gitignore", generate_gitignore(self.config))
+
+            # Vercel is always useful for frontend-only projects
+            from matt_stack.templates.deploy_vercel import generate_vercel_json
+
+            self.write_file("vercel.json", generate_vercel_json(self.config))
+
             return True
         except OSError as e:
             print_error(f"Failed to create root files: {e}")
