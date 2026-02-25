@@ -8,6 +8,7 @@ from pathlib import Path
 import typer
 
 from matt_stack.auditors.base import AuditConfig, AuditReport, AuditType, BaseAuditor, Severity
+from matt_stack.auditors.dependencies import DependencyAuditor
 from matt_stack.auditors.endpoints import EndpointAuditor
 from matt_stack.auditors.quality import CodeQualityAuditor
 from matt_stack.auditors.report import print_json, print_report, write_todo
@@ -26,6 +27,7 @@ AUDITOR_CLASSES: dict[AuditType, type[BaseAuditor]] = {
     AuditType.QUALITY: CodeQualityAuditor,
     AuditType.ENDPOINTS: EndpointAuditor,
     AuditType.TESTS: CoverageAuditor,
+    AuditType.DEPENDENCIES: DependencyAuditor,
 }
 
 

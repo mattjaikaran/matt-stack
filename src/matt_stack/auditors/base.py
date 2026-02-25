@@ -19,6 +19,7 @@ class AuditType(str, Enum):
     QUALITY = "quality"
     ENDPOINTS = "endpoints"
     TESTS = "tests"
+    DEPENDENCIES = "dependencies"
 
 
 @dataclass
@@ -70,8 +71,7 @@ class BaseAuditor(ABC):
         self.findings: list[AuditFinding] = []
 
     @abstractmethod
-    def run(self) -> list[AuditFinding]:
-        ...
+    def run(self) -> list[AuditFinding]: ...
 
     def _rel(self, path: Path) -> Path:
         """Convert absolute path to relative path from project root."""
