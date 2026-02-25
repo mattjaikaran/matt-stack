@@ -80,6 +80,68 @@ def init(
 
 
 @app.command()
+def add(
+    component: Annotated[
+        str,
+        typer.Argument(help="Component to add: frontend, backend, ios"),
+    ],
+    path: Annotated[
+        Path | None,
+        typer.Option("--path", "-p", help="Project path (default: current directory)"),
+    ] = None,
+    framework: Annotated[
+        str | None,
+        typer.Option(
+            "--framework", "-f", help="Frontend framework: react-vite, react-vite-starter"
+        ),
+    ] = None,
+    dry_run: Annotated[
+        bool,
+        typer.Option("--dry-run", help="Preview what would be added without making changes"),
+    ] = False,
+) -> None:
+    """Add a component (frontend, backend, ios) to an existing project."""
+    from matt_stack.commands.add import run_add
+
+    run_add(
+        component=component,
+        project_path=path or Path.cwd(),
+        framework=framework,
+        dry_run=dry_run,
+    )
+
+
+@app.command()
+def upgrade(
+    path: Annotated[
+        Path | None,
+        typer.Argument(help="Project path (default: current directory)"),
+    ] = None,
+    component: Annotated[
+        str | None,
+        typer.Option("--component", "-c", help="Upgrade specific component: backend, frontend"),
+    ] = None,
+    dry_run: Annotated[
+        bool,
+        typer.Option("--dry-run", help="Preview changes without applying them"),
+    ] = False,
+    force: Annotated[
+        bool,
+        typer.Option("--force", help="Overwrite modified files (use with caution)"),
+    ] = False,
+) -> None:
+    """Pull latest boilerplate changes into an existing project."""
+    from matt_stack.commands.upgrade import run_upgrade
+
+    run_upgrade(
+        path=path or Path.cwd(),
+        component=component,
+        dry_run=dry_run,
+        force=force,
+    )
+
+
+@app.command()
 def doctor() -> None:
     """Check your development environment."""
     from matt_stack.commands.doctor import run_doctor
