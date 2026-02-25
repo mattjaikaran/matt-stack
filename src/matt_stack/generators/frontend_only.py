@@ -6,6 +6,7 @@ from collections.abc import Callable
 
 from matt_stack.generators.base import BaseGenerator
 from matt_stack.post_processors.customizer import customize_frontend
+from matt_stack.templates.pre_commit_config import generate_pre_commit_config
 from matt_stack.templates.root_gitignore import generate_gitignore
 from matt_stack.templates.root_makefile import generate_makefile
 from matt_stack.templates.root_readme import generate_readme
@@ -21,6 +22,7 @@ class FrontendOnlyGenerator(BaseGenerator):
             ("Creating project directory", self._step_create_dir),
             ("Cloning frontend", self._step_clone_frontend),
             ("Creating root files", self._step_create_root_files),
+            ("Writing pre-commit config", self._write_pre_commit_config),
             ("Customizing frontend", self._step_customize_frontend),
             ("Initializing git", self._step_init_git),
         ]
@@ -45,6 +47,14 @@ class FrontendOnlyGenerator(BaseGenerator):
             return True
         except OSError as e:
             print_error(f"Failed to create root files: {e}")
+            return False
+
+    def _write_pre_commit_config(self) -> bool:
+        try:
+            self.write_file(".pre-commit-config.yaml", generate_pre_commit_config(self.config))
+            return True
+        except OSError as e:
+            print_error(f"Failed to write pre-commit config: {e}")
             return False
 
     def _step_customize_frontend(self) -> bool:

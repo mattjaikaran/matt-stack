@@ -10,7 +10,9 @@ from matt_stack.post_processors.b2b import print_b2b_instructions
 from matt_stack.post_processors.customizer import customize_backend, customize_frontend
 from matt_stack.post_processors.frontend_config import setup_frontend_monorepo
 from matt_stack.templates.docker_compose import generate_docker_compose
+from matt_stack.templates.docker_compose_override import generate_docker_compose_override
 from matt_stack.templates.docker_compose_prod import generate_docker_compose_prod
+from matt_stack.templates.pre_commit_config import generate_pre_commit_config
 from matt_stack.templates.root_claude_md import generate_claude_md
 from matt_stack.templates.root_env import generate_env_example
 from matt_stack.templates.root_gitignore import generate_gitignore
@@ -29,6 +31,7 @@ class FullstackGenerator(BaseGenerator):
             ("Cloning backend", self._step_clone_backend),
             ("Cloning frontend", self._step_clone_frontend),
             ("Creating root files", self._step_create_root_files),
+            ("Writing pre-commit config", self._write_pre_commit_config),
             ("Customizing backend", self._step_customize_backend),
             ("Customizing frontend", self._step_customize_frontend),
             ("Initializing git", self._step_init_git),
@@ -58,6 +61,10 @@ class FullstackGenerator(BaseGenerator):
             self.write_file("Makefile", generate_makefile(self.config))
             self.write_file("docker-compose.yml", generate_docker_compose(self.config))
             self.write_file("docker-compose.prod.yml", generate_docker_compose_prod(self.config))
+            self.write_file(
+                "docker-compose.override.yml.example",
+                generate_docker_compose_override(self.config),
+            )
             self.write_file(".env.example", generate_env_example(self.config))
             self.write_file(".env", generate_env_example(self.config))
             self.write_file("README.md", generate_readme(self.config))
@@ -87,6 +94,14 @@ class FullstackGenerator(BaseGenerator):
             return True
         except OSError as e:
             print_error(f"Failed to create root files: {e}")
+            return False
+
+    def _write_pre_commit_config(self) -> bool:
+        try:
+            self.write_file(".pre-commit-config.yaml", generate_pre_commit_config(self.config))
+            return True
+        except OSError as e:
+            print_error(f"Failed to write pre-commit config: {e}")
             return False
 
     def _step_customize_backend(self) -> bool:
