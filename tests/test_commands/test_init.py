@@ -8,7 +8,12 @@ from unittest.mock import patch
 import click.exceptions
 import pytest
 
-from matt_stack.commands.init import _generate, _run_from_preset, _run_interactive, run_init
+from matt_stack.commands.init import (
+    _generate,
+    _run_from_preset,
+    _run_interactive,
+    run_init,
+)
 from matt_stack.config import FrontendFramework, ProjectConfig, ProjectType, Variant
 
 
@@ -289,3 +294,146 @@ def test_wizard_default_name_skips_prompt(tmp_path: Path) -> None:
         mock_gen.assert_called_once()
         config: ProjectConfig = mock_gen.call_args[0][0]
         assert config.name == "prenamed"
+
+
+# ---------------------------------------------------------------------------
+# YAML config E2E tests
+# ---------------------------------------------------------------------------
+
+
+def test_yaml_config_fullstack_creates_expected_config(tmp_path: Path) -> None:
+    """E2E: init from YAML config with fullstack type builds correct ProjectConfig."""
+    cfg_file = tmp_path / "config.yaml"
+    cfg_file.write_text(
+        "name: yaml-test-project\n"
+        "type: fullstack\n"
+        "variant: starter\n"
+        "frontend:\n"
+        "  framework: react-vite-starter\n"
+        "ios: false\n"
+        "backend:\n"
+        "  celery: false\n"
+        "  redis: true\n"
+        "deployment: docker\n"
+    )
+    with patch("matt_stack.commands.init._generate") as mock_gen:
+        mock_gen.return_value = True
+        run_init(config_file=str(cfg_file), output_dir=tmp_path)
+
+        mock_gen.assert_called_once()
+        config: ProjectConfig = mock_gen.call_args[0][0]
+        assert config.name == "yaml-test-project"
+        assert config.project_type == ProjectType.FULLSTACK
+        assert config.variant == Variant.STARTER
+        assert config.frontend_framework == FrontendFramework.REACT_VITE_STARTER
+        assert config.include_ios is False
+        assert config.use_celery is False
+        assert config.use_redis is True
+
+
+def test_yaml_config_backend_only_e2e(tmp_path: Path) -> None:
+    """E2E: init from YAML with backend-only type and B2B variant."""
+    cfg_file = tmp_path / "config.yaml"
+    cfg_file.write_text(
+        "name: api-service\n"
+        "type: backend-only\n"
+        "variant: b2b\n"
+        "backend:\n"
+        "  celery: true\n"
+        "  redis: true\n"
+        "deployment: railway\n"
+        "author:\n"
+        "  name: Test Dev\n"
+        "  email: dev@test.com\n"
+    )
+    with patch("matt_stack.commands.init._generate") as mock_gen:
+        mock_gen.return_value = True
+        run_init(config_file=str(cfg_file), output_dir=tmp_path)
+
+        config: ProjectConfig = mock_gen.call_args[0][0]
+        assert config.name == "api-service"
+        assert config.project_type == ProjectType.BACKEND_ONLY
+        assert config.variant == Variant.B2B
+        assert config.use_celery is True
+        assert config.use_redis is True
+        assert config.author_name == "Test Dev"
+        assert config.author_email == "dev@test.com"
+
+
+def test_yaml_config_frontend_only_e2e(tmp_path: Path) -> None:
+    """E2E: init from YAML with frontend-only type."""
+    cfg_file = tmp_path / "config.yaml"
+    cfg_file.write_text(
+        "name: my-frontend\ntype: frontend-only\nfrontend:\n  framework: react-vite\n"
+    )
+    with patch("matt_stack.commands.init._generate") as mock_gen:
+        mock_gen.return_value = True
+        run_init(config_file=str(cfg_file), output_dir=tmp_path)
+
+        config: ProjectConfig = mock_gen.call_args[0][0]
+        assert config.name == "my-frontend"
+        assert config.project_type == ProjectType.FRONTEND_ONLY
+        assert config.frontend_framework == FrontendFramework.REACT_VITE
+        # Frontend-only forces these off
+        assert config.use_celery is False
+        assert config.use_redis is False
+        assert config.include_ios is False
+
+
+def test_yaml_config_with_invalid_project_type_exits(tmp_path: Path) -> None:
+    """YAML config with an invalid project type should exit with error."""
+    cfg_file = tmp_path / "config.yaml"
+    cfg_file.write_text("name: bad-app\ntype: nonexistent\n")
+
+    with pytest.raises((SystemExit, click.exceptions.Exit)):
+        run_init(config_file=str(cfg_file), output_dir=tmp_path)
+
+
+def test_yaml_config_with_missing_name_exits(tmp_path: Path) -> None:
+    """YAML config without a name field should exit with error."""
+    cfg_file = tmp_path / "config.yaml"
+    cfg_file.write_text("type: fullstack\nvariant: starter\n")
+
+    with pytest.raises((SystemExit, click.exceptions.Exit)):
+        run_init(config_file=str(cfg_file), output_dir=tmp_path)
+
+
+def test_yaml_config_dry_run_flag(tmp_path: Path) -> None:
+    """dry_run flag should be propagated to the config from YAML init."""
+    cfg_file = tmp_path / "config.yaml"
+    cfg_file.write_text("name: dry-run-test\ntype: fullstack\n")
+
+    with patch("matt_stack.commands.init._generate") as mock_gen:
+        mock_gen.return_value = True
+        run_init(config_file=str(cfg_file), output_dir=tmp_path, dry_run=True)
+
+        config: ProjectConfig = mock_gen.call_args[0][0]
+        assert config.dry_run is True
+
+
+def test_yaml_config_with_ios_enabled(tmp_path: Path) -> None:
+    """YAML config with ios: true should set include_ios on the config."""
+    cfg_file = tmp_path / "config.yaml"
+    cfg_file.write_text("name: ios-app\ntype: fullstack\nios: true\n")
+
+    with patch("matt_stack.commands.init._generate") as mock_gen:
+        mock_gen.return_value = True
+        run_init(config_file=str(cfg_file), output_dir=tmp_path)
+
+        config: ProjectConfig = mock_gen.call_args[0][0]
+        assert config.include_ios is True
+
+
+def test_yaml_config_path_resolution(tmp_path: Path) -> None:
+    """YAML config should create the project path under output_dir / name."""
+    cfg_file = tmp_path / "config.yaml"
+    cfg_file.write_text("name: path-test\ntype: fullstack\n")
+
+    with patch("matt_stack.commands.init._generate") as mock_gen:
+        mock_gen.return_value = True
+        custom_output = tmp_path / "projects"
+        custom_output.mkdir()
+        run_init(config_file=str(cfg_file), output_dir=custom_output)
+
+        config: ProjectConfig = mock_gen.call_args[0][0]
+        assert config.path == custom_output / "path-test"
