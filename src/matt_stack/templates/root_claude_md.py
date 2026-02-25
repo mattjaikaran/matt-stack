@@ -57,19 +57,29 @@ def _tech(config: ProjectConfig) -> str:
 
 
 def _commands(config: ProjectConfig) -> str:
-    return """\
-## Commands
+    lines = [
+        "## Commands",
+        "",
+        "```bash",
+        "make setup          # Install all deps",
+    ]
 
-```bash
-make setup          # Install all deps
-make up             # Start Docker services
-make down           # Stop services
-make test           # Run all tests
-make lint           # Lint all code
-make format         # Format all code
-make backend-dev    # Django dev server (port 8000)
-make frontend-dev   # Vite dev server (port 3000)
-```"""
+    if config.has_backend:
+        lines.append("make up             # Start Docker services")
+        lines.append("make down           # Stop services")
+
+    lines.append("make test           # Run all tests")
+    lines.append("make lint           # Lint all code")
+    lines.append("make format         # Format all code")
+
+    if config.has_backend:
+        lines.append("make backend-dev    # Django dev server (port 8000)")
+
+    if config.has_frontend:
+        lines.append("make frontend-dev   # Vite dev server (port 3000)")
+
+    lines.append("```")
+    return "\n".join(lines)
 
 
 def _backend(config: ProjectConfig) -> str:

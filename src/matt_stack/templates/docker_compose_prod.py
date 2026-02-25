@@ -25,7 +25,7 @@ def generate_docker_compose_prod(config: ProjectConfig) -> str:
             services.append(_celery_beat_service(config))
 
     if config.has_frontend:
-        services.append(_frontend_service())
+        services.append(_frontend_service(config))
 
     services_block = "\n\n".join(services)
     volumes_block = "\n".join(volumes)
@@ -137,14 +137,23 @@ def _celery_beat_service(config: ProjectConfig) -> str:
     restart: unless-stopped"""
 
 
-def _frontend_service() -> str:
-    return """\
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    ports:
-      - "${FRONTEND_PORT:-3000}:80"
-    depends_on:
-      - api
-    restart: unless-stopped"""
+def _frontend_service(config: ProjectConfig) -> str:
+    lines = [
+        "  frontend:",
+        "    build:",
+        "      context: ./frontend",
+        "      dockerfile: Dockerfile",
+        "    ports:",
+        '      - "${FRONTEND_PORT:-3000}:80"',
+    ]
+
+    if config.has_backend:
+        lines.extend(
+            [
+                "    depends_on:",
+                "      - api",
+            ]
+        )
+
+    lines.append("    restart: unless-stopped")
+    return "\n".join(lines)

@@ -53,26 +53,40 @@ def _tech_stack(config: ProjectConfig) -> str:
 
 
 def _quickstart(config: ProjectConfig) -> str:
-    return """\
-## Quick Start
+    lines = [
+        "## Quick Start",
+        "",
+        "```bash",
+        "# Install dependencies",
+        "make setup",
+    ]
 
-```bash
-# Install dependencies
-make setup
+    if config.has_backend:
+        lines.extend(
+            [
+                "",
+                "# Start services (Docker)",
+                "make up",
+                "",
+                "# Run database migrations",
+                "make backend-migrate",
+                "",
+                "# Create admin user",
+                "make backend-superuser",
+            ]
+        )
 
-# Start services (Docker)
-make up
+    lines.append("")
+    lines.append("# Start dev servers")
 
-# Run database migrations
-make backend-migrate
+    if config.has_backend:
+        lines.append("make backend-dev   # http://localhost:8000")
 
-# Create admin user
-make backend-superuser
+    if config.has_frontend:
+        lines.append("make frontend-dev  # http://localhost:3000")
 
-# Start dev servers
-make backend-dev   # http://localhost:8000
-make frontend-dev  # http://localhost:3000
-```"""
+    lines.append("```")
+    return "\n".join(lines)
 
 
 def _project_structure_fullstack(config: ProjectConfig) -> str:
@@ -119,19 +133,25 @@ def _project_structure_frontend(config: ProjectConfig) -> str:
 
 
 def _commands(config: ProjectConfig) -> str:
-    return """\
+    rows = [
+        ("| Command | Description |", True),
+        ("|---------|-------------|", True),
+        ("| `make setup` | Install all dependencies |", True),
+        ("| `make up` | Start Docker services |", config.has_backend),
+        ("| `make down` | Stop Docker services |", config.has_backend),
+        ("| `make test` | Run all tests |", True),
+        ("| `make lint` | Lint all code |", True),
+        ("| `make format` | Format all code |", True),
+    ]
+
+    table = "\n".join(row for row, include in rows if include)
+
+    return f"""\
 ## Commands
 
 Run `make help` to see all available commands.
 
-| Command | Description |
-|---------|-------------|
-| `make setup` | Install all dependencies |
-| `make up` | Start Docker services |
-| `make down` | Stop Docker services |
-| `make test` | Run all tests |
-| `make lint` | Lint all code |
-| `make format` | Format all code |"""
+{table}"""
 
 
 def _api_docs(config: ProjectConfig) -> str:
