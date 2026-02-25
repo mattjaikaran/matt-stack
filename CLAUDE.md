@@ -14,10 +14,17 @@ CLI tool to scaffold fullstack monorepos and audit them for quality.
 matt-stack init [name]           # Create project (interactive or preset)
 matt-stack init my-app -p starter-fullstack  # Preset mode
 matt-stack init --config f.yaml  # Config file mode
+matt-stack add frontend          # Add component to existing project
+matt-stack add backend --path .  # Add backend to frontend-only project
+matt-stack add ios               # Add iOS client
+matt-stack upgrade               # Pull latest boilerplate changes
+matt-stack upgrade -c backend    # Upgrade specific component
+matt-stack upgrade --dry-run     # Preview changes without applying
 matt-stack audit [path]          # Static analysis (all 4 domains)
 matt-stack audit -t quality      # Single domain
 matt-stack audit --json          # Machine-readable
 matt-stack audit --fix           # Auto-remove debug statements
+matt-stack audit -s error        # Filter by minimum severity
 matt-stack doctor                # Check environment
 matt-stack info                  # Show presets and repos
 ```
@@ -26,7 +33,7 @@ matt-stack info                  # Show presets and repos
 
 ```
 src/matt_stack/
-├── cli.py              # Typer app — 6 commands: init, audit, doctor, info, presets, version
+├── cli.py              # Typer app — 8 commands: init, add, upgrade, audit, doctor, info, presets, version
 ├── config.py           # ProjectType, Variant, FrontendFramework, DeploymentTarget enums
 │                       # ProjectConfig dataclass (13 fields, 8 computed properties)
 │                       # REPO_URLS dict, normalize_name(), to_python_package()
@@ -35,6 +42,8 @@ src/matt_stack/
 │
 ├── commands/
 │   ├── init.py         # run_init() — 3 modes: config-file → preset → interactive wizard
+│   ├── add.py          # run_add() — add frontend/backend/ios to existing project
+│   ├── upgrade.py      # run_upgrade() — pull latest boilerplate changes, diff + apply
 │   ├── audit.py        # run_audit() — orchestrates 4 auditor classes, writes report
 │   ├── doctor.py       # run_doctor() — checks python, git, uv, bun, make, docker, ports
 │   └── info.py         # run_info() — 3 tables: presets, repos, examples
@@ -65,13 +74,14 @@ src/matt_stack/
 │
 ├── post_processors/    # customizer (rename), frontend_config (monorepo), b2b (instructions)
 ├── templates/          # f-string functions: makefile, docker_compose, env, readme, gitignore, claude_md
+│                       # deploy_railway, deploy_render, deploy_vercel
 └── utils/              # console (Rich helpers), git, docker, process, yaml_config
 ```
 
 ## Key Patterns
 
 1. **Templates = Python functions** returning f-strings (not Jinja2). All in `templates/`.
-2. **Generators inherit BaseGenerator**. Each has a `generate()` method with numbered steps.
+2. **Generators inherit BaseGenerator (ABC)**. Each defines a `steps` property; base class runs them.
 3. **ProjectConfig** is the single config object passed everywhere. Computed properties: `has_backend`, `has_frontend`, `is_fullstack`, `is_b2b`, `backend_dir`, `frontend_dir`.
 4. **Parsers are pure functions** — regex-based, no AST, no new dependencies. Each returns dataclasses.
 5. **Auditors inherit BaseAuditor**. Each has `run() → list[AuditFinding]`, uses `self.add_finding()`.
@@ -92,7 +102,8 @@ src/matt_stack/
 
 ### Add a new generator
 1. Create `generators/new_type.py` inheriting `BaseGenerator`
-2. Add routing in `commands/init.py`
+2. Implement `steps` property returning `list[tuple[str, Callable]]`
+3. Add routing in `commands/init.py`
 
 ### Add a new template
 1. Create function in `templates/new_template.py`
@@ -102,7 +113,7 @@ src/matt_stack/
 
 ```bash
 uv sync                        # Install
-uv run pytest -x -q            # Tests (48 tests)
+uv run pytest -x -q            # Tests (294 tests)
 uv run ruff check src/ tests/  # Lint
 uv run ruff format src/ tests/ # Format
 uv run matt-stack init test --preset starter-fullstack -o /tmp  # E2E test

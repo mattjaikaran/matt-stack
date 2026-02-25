@@ -70,10 +70,10 @@
 - [x] Add --quiet/-q flag for CI-friendly output
 - [x] Add 25 tests for post-processors, iOS, docker utils, yaml edge cases (227 total)
 
-## Phase 9: Tier 1 — Game-Changers
-- [ ] `matt-stack add` — expand existing projects in-place (add frontend/backend/ios)
-- [ ] `matt-stack upgrade` — pull latest boilerplate changes into existing project
-- [ ] Deployment target scaffolding (Railway, Render, Vercel configs)
+## Phase 9: Tier 1 — Game-Changers (completed)
+- [x] `matt-stack add` — expand existing projects in-place (add frontend/backend/ios)
+- [x] `matt-stack upgrade` — pull latest boilerplate changes into existing project
+- [x] Deployment target scaffolding (Railway, Render, Vercel configs)
 
 ## Phase 10: Tier 2 — High-Value Polish
 - [ ] Conditional template cleanup — make all templates 100% conditional on feature flags
