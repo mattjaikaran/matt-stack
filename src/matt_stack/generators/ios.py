@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from matt_stack.config import REPO_URLS, ProjectConfig
+from matt_stack.config import ProjectConfig, get_repo_urls
 from matt_stack.utils.console import print_info, print_success
 from matt_stack.utils.git import clone_repo, remove_git_history
 
@@ -79,7 +79,7 @@ def add_ios_to_project(config: ProjectConfig) -> bool:
         print_info("iOS directory already exists, skipping")
         return True
 
-    url = REPO_URLS["swift-ios"]
+    url = get_repo_urls()["swift-ios"]
     if not clone_repo(url, ios_dir):
         return False
 

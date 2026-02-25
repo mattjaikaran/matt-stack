@@ -77,6 +77,23 @@ def run_doctor() -> None:
         "running" if dk_running else "not running",
     )
 
+    # Security tools
+    pip_audit_available = command_available("pip-audit")
+    table.add_row(
+        "pip-audit",
+        _status(pip_audit_available) if pip_audit_available else "[yellow]OPTIONAL[/yellow]",
+        get_command_version("pip-audit").split("\n")[0] if pip_audit_available
+        else "not installed — install: uv tool install pip-audit",
+    )
+
+    npm_audit_hint = "bundled with npm/bun"
+    npm_available = command_available("npm")
+    table.add_row(
+        "npm audit",
+        _status(npm_available) if npm_available else "[yellow]OPTIONAL[/yellow]",
+        npm_audit_hint if npm_available else "npm not installed (optional for vuln scanning)",
+    )
+
     # Ports
     ports = [
         (5432, "PostgreSQL"),

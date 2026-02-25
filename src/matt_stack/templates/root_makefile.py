@@ -15,7 +15,7 @@ def generate_makefile(config: ProjectConfig) -> str:
         sections.append(_backend_targets())
         sections.append(_frontend_targets())
         if config.include_ios:
-            sections.append(_ios_targets())
+            sections.append(_ios_targets(config))
         sections.append(_combined_targets(config))
         sections.append(_prod_targets())
     elif config.has_backend:
@@ -146,14 +146,15 @@ frontend-lint: ## Lint frontend
 \tcd frontend && bun run lint"""
 
 
-def _ios_targets() -> str:
-    return """
+def _ios_targets(config: ProjectConfig) -> str:
+    scheme = config.display_name.replace(" ", "")
+    return f"""
 .PHONY: ios-build ios-test
 ios-build: ## Build iOS project
-\tcd ios && xcodebuild -scheme MyApp -sdk iphonesimulator build
+\tcd ios && xcodebuild -scheme {scheme} -sdk iphonesimulator build
 
 ios-test: ## Run iOS tests
-\tcd ios && xcodebuild -scheme MyApp -sdk iphonesimulator test"""
+\tcd ios && xcodebuild -scheme {scheme} -sdk iphonesimulator test"""
 
 
 def _combined_targets(config: ProjectConfig) -> str:

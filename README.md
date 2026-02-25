@@ -45,6 +45,7 @@ matt-stack init my-app --preset b2b-fullstack -o ~/projects
 | `matt-stack audit [path]` | Run static analysis on a generated project |
 | `matt-stack doctor` | Check your development environment |
 | `matt-stack info` | Show available presets and source repos |
+| `matt-stack config [action]` | Manage user config (show/path/init) |
 | `matt-stack version` | Show version |
 
 ### Global Options
@@ -83,7 +84,7 @@ matt-stack init my-app --preset b2b-fullstack -o ~/projects
 
 | Flag | Description |
 |------|-------------|
-| `--type, -t` | Audit type(s): `types`, `quality`, `endpoints`, `tests`, `dependencies` |
+| `--type, -t` | Audit type(s): `types`, `quality`, `endpoints`, `tests`, `dependencies`, `vulnerabilities` |
 | `--severity, -s` | Minimum severity: `error`, `warning`, `info` |
 | `--live` | Enable live endpoint probing (GET only, safe) |
 | `--base-url` | Base URL for live probing (default: `http://localhost:8000`) |
@@ -204,6 +205,24 @@ my-app/
     └── todo.md                       # Audit findings land here
 ```
 
+## iOS Support
+
+Include an iOS client with any fullstack project:
+
+```bash
+# During project creation
+matt-stack init my-app --preset starter-fullstack --ios
+
+# Add to an existing project
+matt-stack add ios --path /path/to/project
+```
+
+The iOS client is cloned from [swift-ios-starter](https://github.com/mattjaikaran/swift-ios-starter) and auto-renamed from the default `MyApp` to match your project's display name. It targets SwiftUI with iOS 17+ and uses the MVVM pattern.
+
+**Backend networking**: The generated iOS project includes an API client configured with a base URL constant. Update it to point at your backend (e.g. `http://localhost:8000` for local development).
+
+**Audit limitation**: The `matt-stack audit` command does not yet scan `.swift` files. Type safety, quality, and test auditors currently cover Python and TypeScript only.
+
 ## Source Repositories
 
 | Key | Repository |
@@ -259,6 +278,19 @@ src/matt_stack/
 │                        # pre_commit_config, docker_compose_override
 │                        # deploy_railway, deploy_render, deploy_vercel
 └── utils/               # console, git, docker, process, yaml_config
+```
+
+## Ecosystem
+
+matt-stack is extensible -- bring your own boilerplates, presets, and audit plugins.
+
+- **Custom repos & presets**: `~/.matt-stack/config.yaml` -- see [Ecosystem Guide](docs/ecosystem.md)
+- **Audit plugins**: Drop `.py` files in `matt-stack-plugins/` -- see [Plugin Guide](docs/plugin-guide.md)
+- **Deployment targets**: 8 platforms supported -- see [Deployment Guide](docs/deployment-guide.md)
+
+```bash
+matt-stack config init   # Create user config template
+matt-stack config show   # View current config
 ```
 
 ## Development

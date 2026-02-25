@@ -9,7 +9,7 @@ from abc import ABC, abstractmethod
 from collections.abc import Callable
 from pathlib import Path
 
-from matt_stack.config import REPO_URLS, ProjectConfig
+from matt_stack.config import ProjectConfig, get_repo_urls
 from matt_stack.utils.console import (
     create_progress,
     print_error,
@@ -48,10 +48,10 @@ class BaseGenerator(ABC):
     def clone_and_strip(self, repo_key: str, dest_name: str) -> bool:
         """Clone a repo and strip its .git history."""
         if self.config.dry_run:
-            url = REPO_URLS[repo_key]
+            url = get_repo_urls()[repo_key]
             print_info(f"[dry-run] Would clone {url} into {dest_name}/")
             return True
-        url = REPO_URLS[repo_key]
+        url = get_repo_urls()[repo_key]
         dest = self.config.path / dest_name
         if not clone_repo(url, dest):
             return False

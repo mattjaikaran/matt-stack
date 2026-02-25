@@ -24,12 +24,15 @@ class FrontendFramework(str, Enum):
     REACT_VITE_STARTER = "react-vite-starter"
 
 
-# NOTE: Currently only DOCKER is fully implemented. RAILWAY and RENDER are
-# reserved for future deployment target support in generators.
 class DeploymentTarget(str, Enum):
     DOCKER = "docker"
     RAILWAY = "railway"
     RENDER = "render"
+    FLY_IO = "fly-io"
+    AWS = "aws"
+    GCP = "gcp"
+    HETZNER = "hetzner"
+    SELF_HOSTED = "self-hosted"
 
 
 REPO_URLS: dict[str, str] = {
@@ -40,6 +43,15 @@ REPO_URLS: dict[str, str] = {
 }
 
 DEFAULT_BRANCH = "main"
+
+
+def get_repo_urls() -> dict[str, str]:
+    """Get repo URLs merged with user config overrides."""
+    from matt_stack.user_config import get_user_repos
+
+    urls = dict(REPO_URLS)
+    urls.update(get_user_repos())
+    return urls
 
 
 def normalize_name(name: str) -> str:

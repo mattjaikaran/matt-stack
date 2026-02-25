@@ -85,6 +85,59 @@ class FullstackGenerator(BaseGenerator):
                 from matt_stack.templates.deploy_render import generate_render_yaml
 
                 self.write_file("render.yaml", generate_render_yaml(self.config))
+            elif self.config.deployment == DeploymentTarget.FLY_IO:
+                from matt_stack.templates.deploy_fly import generate_fly_toml
+
+                self.write_file("fly.toml", generate_fly_toml(self.config))
+            elif self.config.deployment == DeploymentTarget.AWS:
+                from matt_stack.templates.deploy_aws import (
+                    generate_copilot_manifest,
+                    generate_ecs_task_definition,
+                )
+
+                self.write_file(
+                    "ecs-task-definition.json",
+                    generate_ecs_task_definition(self.config),
+                )
+                self.write_file(
+                    "copilot/api/manifest.yml",
+                    generate_copilot_manifest(self.config),
+                )
+            elif self.config.deployment == DeploymentTarget.GCP:
+                from matt_stack.templates.deploy_gcp import (
+                    generate_app_engine_yaml,
+                    generate_cloud_run_yaml,
+                )
+
+                self.write_file("service.yaml", generate_cloud_run_yaml(self.config))
+                self.write_file("app.yaml", generate_app_engine_yaml(self.config))
+            elif self.config.deployment == DeploymentTarget.HETZNER:
+                from matt_stack.templates.deploy_hetzner import (
+                    generate_caddyfile,
+                    generate_hetzner_compose,
+                )
+
+                self.write_file(
+                    "docker-compose.prod.yml",
+                    generate_hetzner_compose(self.config),
+                )
+                self.write_file("Caddyfile", generate_caddyfile(self.config))
+            elif self.config.deployment == DeploymentTarget.SELF_HOSTED:
+                from matt_stack.templates.deploy_self_hosted import (
+                    generate_nginx_conf,
+                    generate_self_hosted_compose,
+                    generate_systemd_service,
+                )
+
+                self.write_file(
+                    "docker-compose.prod.yml",
+                    generate_self_hosted_compose(self.config),
+                )
+                self.write_file("nginx.conf", generate_nginx_conf(self.config))
+                self.write_file(
+                    f"{self.config.name}.service",
+                    generate_systemd_service(self.config),
+                )
             # Vercel is always useful for frontend
             if self.config.has_frontend:
                 from matt_stack.templates.deploy_vercel import generate_vercel_json

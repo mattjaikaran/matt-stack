@@ -86,3 +86,71 @@
 - [x] docker-compose.override.yml template for per-developer customization
 - [x] iOS generator customization (rename MyApp references)
 - [x] YAML config mode E2E test (8 tests covering all config paths)
+
+---
+
+## Phase 14: New Boilerplate Support (Future)
+
+### Next.js (App Router)
+- [ ] Create `nextjs-app-boilerplate` repo — App Router, TypeScript, Tailwind, server actions, middleware auth
+- [ ] Add preset: `starter-nextjs-fullstack` (Next.js + Django API)
+- [ ] Add preset: `starter-nextjs` (Next.js standalone)
+- [ ] Create `parsers/nextjs_routes.py` — parse app directory route segments (`app/**/page.tsx`, `app/api/**/route.ts`)
+- [ ] Extend endpoint auditor for Next.js API routes (`app/api/*/route.ts`)
+- [ ] Add deploy support: Vercel (native), Docker (standalone output)
+- [ ] Add `FrontendFramework.NEXTJS` enum value
+- [ ] Wire into generators (new `NextjsFullstackGenerator` or extend existing)
+
+### C# / ASP.NET
+- [ ] Create `aspnet-boilerplate` repo — .NET 8, minimal API or controllers, EF Core, Identity
+- [ ] Add preset: `starter-aspnet-api`
+- [ ] Add preset: `starter-aspnet-fullstack` (with React frontend)
+- [ ] Create `parsers/csharp_schemas.py` — parse C# classes with `[Required]`, `[StringLength]`, property types
+- [ ] Extend type auditor for C# ↔ TypeScript cross-language checks
+- [ ] Add `ProjectType.ASPNET_BACKEND` or handle via `backend_repo_key` routing
+- [ ] Add deploy support: Docker, Azure App Service, AWS ECS
+
+### Kotlin Android
+- [ ] Create `kotlin-android-starter` repo — Jetpack Compose, MVVM, Retrofit, Room
+- [ ] Add preset: `starter-android` (add to fullstack like iOS)
+- [ ] Create `parsers/kotlin_schemas.py` — parse data classes with `@Serializable` annotation
+- [ ] Extend type auditor for Kotlin ↔ Python/TS cross-language checks
+- [ ] Add `config.include_android` flag (mirrors `include_ios` pattern)
+- [ ] Wire into generators (similar to iOS flow)
+- [ ] CI template for Android builds (GitHub Actions)
+
+### React Native
+- [ ] Create `react-native-starter` repo — Expo, TypeScript, React Navigation
+- [ ] Add preset: `starter-mobile` (add to fullstack like iOS)
+- [ ] Reuse existing TS parser (React Native is TypeScript)
+- [ ] Existing TS/Zod auditor applies — no new parser needed
+- [ ] Add `config.include_mobile` flag
+- [ ] Add deploy support: EAS Build (Expo)
+- [ ] Wire into generators (similar to iOS flow)
+
+### Svelte / SvelteKit
+- [ ] Create `sveltekit-boilerplate` repo — SvelteKit, TypeScript, form actions, load functions
+- [ ] Add preset: `starter-sveltekit-fullstack` (SvelteKit + Django API)
+- [ ] Add preset: `starter-sveltekit` (SvelteKit standalone)
+- [ ] Create `parsers/svelte_schemas.py` — extract TS from `<script lang="ts">` blocks, Zod schemas
+- [ ] Extend auditor for SvelteKit routes (`+page.server.ts`, `+server.ts`)
+- [ ] Add `FrontendFramework.SVELTEKIT` enum value
+- [ ] Add deploy support: Vercel, Node adapter, Docker
+
+### Vue / Nuxt
+- [ ] Create `nuxt-boilerplate` repo — Nuxt 3, TypeScript, auto-imports, composables
+- [ ] Add preset: `starter-nuxt-fullstack`, `starter-nuxt`
+- [ ] Create `parsers/vue_schemas.py` — extract TS from `<script setup lang="ts">` blocks
+- [ ] Extend auditor for Nuxt routes (`server/api/**/*.ts`)
+- [ ] Add `FrontendFramework.NUXT` enum value
+- [ ] Add deploy support: Vercel, Nitro, Docker
+
+### Cross-cutting concerns for all new boilerplates
+- [ ] Each new boilerplate needs a generator class (inherit BaseGenerator)
+- [ ] Each needs Makefile targets added to `root_makefile.py`
+- [ ] Each needs docker-compose service definitions where applicable
+- [ ] Each needs README template additions
+- [ ] Each needs CLAUDE.md template additions
+- [ ] Type auditor `TYPE_COMPATIBILITY` dict needs language pair entries
+- [ ] `NAME_CONVERTERS` dict needs language pair entries
+- [ ] Tests for each new parser, generator, and preset

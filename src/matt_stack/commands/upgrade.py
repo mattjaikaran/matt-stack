@@ -10,7 +10,7 @@ from pathlib import Path
 import typer
 from rich.table import Table
 
-from matt_stack.config import REPO_URLS
+from matt_stack.config import get_repo_urls
 from matt_stack.utils.console import (
     console,
     print_error,
@@ -139,7 +139,7 @@ def _upgrade_component(
 
     with tempfile.TemporaryDirectory() as tmp_dir:
         tmp_path = Path(tmp_dir) / component
-        url = REPO_URLS[repo_key]
+        url = get_repo_urls()[repo_key]
 
         if not clone_repo(url, tmp_path):
             print_error(f"Failed to clone {repo_key} boilerplate")

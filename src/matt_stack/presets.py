@@ -86,3 +86,28 @@ def get_preset(name: str) -> Preset | None:
 
 def list_presets() -> list[Preset]:
     return list(PRESETS.values())
+
+
+def get_all_presets() -> dict[str, Preset]:
+    """Get all presets including user-defined ones."""
+    from matt_stack.user_config import get_user_presets
+
+    all_presets = dict(PRESETS)
+    user_presets = get_user_presets()
+    for name, data in user_presets.items():
+        if isinstance(data, dict):
+            try:
+                all_presets[name] = Preset(
+                    name=name,
+                    description=data.get("description", f"Custom preset: {name}"),
+                    project_type=ProjectType(data.get("project_type", "fullstack")),
+                    variant=Variant(data.get("variant", "starter")),
+                    frontend_framework=FrontendFramework(
+                        data.get("frontend_framework", "react-vite")
+                    ),
+                    include_ios=data.get("include_ios", False),
+                    use_celery=data.get("use_celery", True),
+                )
+            except (ValueError, KeyError):
+                continue  # Skip invalid presets
+    return all_presets

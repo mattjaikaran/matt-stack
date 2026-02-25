@@ -8,10 +8,10 @@ from pathlib import Path
 import typer
 
 from matt_stack.config import (
-    REPO_URLS,
     FrontendFramework,
     ProjectConfig,
     ProjectType,
+    get_repo_urls,
 )
 from matt_stack.utils.console import (
     console,
@@ -81,7 +81,7 @@ def _clone_component(component: str, config: ProjectConfig, *, dry_run: bool) ->
         print_error(f"Unknown component: {component}")
         return False
 
-    url = REPO_URLS[repo_key]
+    url = get_repo_urls()[repo_key]
 
     if dry_run:
         print_info(f"[dry-run] Would clone {url} into {dest.name}/")

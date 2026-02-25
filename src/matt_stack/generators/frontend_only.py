@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 
+from matt_stack.config import DeploymentTarget
 from matt_stack.generators.base import BaseGenerator
 from matt_stack.post_processors.customizer import customize_frontend
 from matt_stack.templates.pre_commit_config import generate_pre_commit_config
@@ -43,6 +44,11 @@ class FrontendOnlyGenerator(BaseGenerator):
             from matt_stack.templates.deploy_vercel import generate_vercel_json
 
             self.write_file("vercel.json", generate_vercel_json(self.config))
+
+            if self.config.deployment == DeploymentTarget.FLY_IO:
+                from matt_stack.templates.deploy_fly import generate_fly_toml
+
+                self.write_file("fly.toml", generate_fly_toml(self.config))
 
             return True
         except OSError as e:

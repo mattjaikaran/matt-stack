@@ -20,6 +20,7 @@ class AuditType(str, Enum):
     ENDPOINTS = "endpoints"
     TESTS = "tests"
     DEPENDENCIES = "dependencies"
+    VULNERABILITIES = "vulnerabilities"
 
 
 @dataclass

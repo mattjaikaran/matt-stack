@@ -166,3 +166,42 @@ def test_zod_matching_by_name_variants(tmp_path: Path) -> None:
         f for f in findings if "Zod schema" in f.message and "missing field" in f.message
     ]
     assert len(zod_missing) == 0
+
+
+def test_type_compatibility_structure() -> None:
+    """TYPE_COMPATIBILITY should have python-typescript pair with expected types."""
+    from matt_stack.auditors.types import TYPE_COMPATIBILITY
+
+    py_ts = TYPE_COMPATIBILITY[("python", "typescript")]
+    assert py_ts["str"] == {"string"}
+    assert py_ts["int"] == {"number"}
+    assert py_ts["bool"] == {"boolean"}
+    assert py_ts["list"] == {"array", "Array"}
+    assert py_ts["datetime"] == {"string", "Date"}
+
+
+def test_type_map_backward_compat() -> None:
+    """TYPE_MAP should still work as alias for python-typescript pair."""
+    from matt_stack.auditors.types import TYPE_COMPATIBILITY, TYPE_MAP
+
+    assert TYPE_MAP is TYPE_COMPATIBILITY[("python", "typescript")]
+    assert TYPE_MAP["str"] == {"string"}
+
+
+def test_snake_to_pascal() -> None:
+    """snake_to_pascal should convert to PascalCase."""
+    from matt_stack.auditors.types import snake_to_pascal
+
+    assert snake_to_pascal("first_name") == "FirstName"
+    assert snake_to_pascal("user_id") == "UserId"
+    assert snake_to_pascal("name") == "Name"
+
+
+def test_name_converters() -> None:
+    """NAME_CONVERTERS should have python-typescript and python-csharp pairs."""
+    from matt_stack.auditors.types import NAME_CONVERTERS
+
+    assert ("python", "typescript") in NAME_CONVERTERS
+    assert ("python", "csharp") in NAME_CONVERTERS
+    assert NAME_CONVERTERS[("python", "typescript")]("first_name") == "firstName"
+    assert NAME_CONVERTERS[("python", "csharp")]("first_name") == "FirstName"

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+from collections.abc import Callable
 from pathlib import Path
 
 from matt_stack.auditors.base import AuditFinding, AuditType, BaseAuditor, Severity
@@ -14,20 +15,26 @@ from matt_stack.parsers.typescript_types import (
 )
 from matt_stack.parsers.zod_schemas import ZodSchema, find_zod_files, parse_zod_file
 
-# Python → TypeScript type mapping
-TYPE_MAP: dict[str, set[str]] = {
-    "str": {"string"},
-    "int": {"number"},
-    "float": {"number"},
-    "bool": {"boolean"},
-    "list": {"array", "Array"},
-    "dict": {"object", "Record"},
-    "datetime": {"string", "Date"},
-    "date": {"string", "Date"},
-    "uuid": {"string"},
-    "UUID": {"string"},
-    "Decimal": {"number", "string"},
+# Language-pair type compatibility maps
+TYPE_COMPATIBILITY: dict[tuple[str, str], dict[str, set[str]]] = {
+    ("python", "typescript"): {
+        "str": {"string"},
+        "int": {"number"},
+        "float": {"number"},
+        "bool": {"boolean"},
+        "list": {"array", "Array"},
+        "dict": {"object", "Record"},
+        "datetime": {"string", "Date"},
+        "date": {"string", "Date"},
+        "uuid": {"string"},
+        "UUID": {"string"},
+        "Decimal": {"number", "string"},
+    },
+    # Future: ("python", "csharp"), ("python", "kotlin"), ("python", "swift")
 }
+
+# Backward compat alias
+TYPE_MAP = TYPE_COMPATIBILITY[("python", "typescript")]
 
 # snake_case → camelCase conversion
 SNAKE_RE = re.compile(r"_([a-z])")
@@ -40,6 +47,19 @@ def snake_to_camel(name: str) -> str:
 def camel_to_snake(name: str) -> str:
     s = re.sub(r"([A-Z])", r"_\1", name)
     return s.lower().lstrip("_")
+
+
+def snake_to_pascal(name: str) -> str:
+    """Convert snake_case to PascalCase (for C# conventions)."""
+    return "".join(word.capitalize() for word in name.split("_"))
+
+
+# Name convention converters per language pair
+NAME_CONVERTERS: dict[tuple[str, str], Callable[[str], str]] = {
+    ("python", "typescript"): snake_to_camel,
+    ("python", "csharp"): snake_to_pascal,
+    # Future: ("python", "kotlin"): snake_to_camel,
+}
 
 
 class TypeSafetyAuditor(BaseAuditor):
@@ -129,7 +149,8 @@ class TypeSafetyAuditor(BaseAuditor):
                 continue
 
             # Check type compatibility
-            expected_ts_types = TYPE_MAP.get(pf.type_str, set())
+            type_map = TYPE_COMPATIBILITY.get(("python", "typescript"), {})
+            expected_ts_types = type_map.get(pf.type_str, set())
             if expected_ts_types and not any(t in tf.type_str for t in expected_ts_types):
                 self.add_finding(
                     Severity.WARNING,

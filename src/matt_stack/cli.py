@@ -220,6 +220,44 @@ def audit(
     )
 
 
+@app.command("config")
+def config_cmd(
+    action: Annotated[
+        str,
+        typer.Argument(help="Action: show, path, init"),
+    ] = "show",
+) -> None:
+    """Manage user configuration (~/.matt-stack/config.yaml)."""
+    from matt_stack.user_config import (
+        USER_CONFIG_PATH,
+        init_user_config,
+        load_user_config,
+    )
+    from matt_stack.utils.console import console, print_success
+
+    if action == "show":
+        config = load_user_config()
+        if not config:
+            console.print("[dim]No user config found.[/dim]")
+            console.print("[dim]Create one with: matt-stack config init[/dim]")
+            console.print(f"[dim]Expected path: {USER_CONFIG_PATH}[/dim]")
+        else:
+            import yaml as _yaml
+
+            console.print(f"[bold cyan]Config:[/bold cyan] {USER_CONFIG_PATH}\n")
+            console.print(_yaml.dump(config, default_flow_style=False))
+    elif action == "path":
+        typer.echo(str(USER_CONFIG_PATH))
+    elif action == "init":
+        path = init_user_config()
+        print_success(f"Config template created at {path}")
+    else:
+        from matt_stack.utils.console import print_error
+
+        print_error(f"Unknown action: {action}. Use: show, path, init")
+        raise typer.Exit(code=1)
+
+
 @app.command()
 def version() -> None:
     """Show matt-stack version."""

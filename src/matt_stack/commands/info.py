@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from matt_stack.config import REPO_URLS
+from matt_stack.config import get_repo_urls
 from matt_stack.presets import list_presets
 from matt_stack.utils.console import console, create_table
 
@@ -32,7 +32,7 @@ def _show_presets() -> None:
 
 def _show_repos() -> None:
     table = create_table("Source Repositories", ["Key", "URL"])
-    for key, url in REPO_URLS.items():
+    for key, url in get_repo_urls().items():
         table.add_row(f"[cyan]{key}[/cyan]", url)
     console.print(table)
 

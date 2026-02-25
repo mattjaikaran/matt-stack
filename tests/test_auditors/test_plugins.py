@@ -131,6 +131,42 @@ class BetaAuditor(BaseAuditor):
         names = {cls.__name__ for cls in result}
         assert names == {"AlphaAuditor", "BetaAuditor"}
 
+    def test_plugin_with_metadata(self, tmp_path: Path) -> None:
+        """Plugin with PLUGIN_META should load and metadata should be accessible."""
+        plugin_dir = tmp_path / "matt-stack-plugins"
+        plugin_dir.mkdir()
+        (plugin_dir / "meta_plugin.py").write_text(
+            "from matt_stack.auditors.base import AuditType, BaseAuditor\n\n"
+            "PLUGIN_META = {\n"
+            '    "name": "Test Meta Plugin",\n'
+            '    "version": "1.0.0",\n'
+            '    "author": "Test Author",\n'
+            "}\n\n"
+            "class MetaAuditor(BaseAuditor):\n"
+            "    audit_type = AuditType.QUALITY\n"
+            "    def run(self):\n"
+            "        return self.findings\n"
+        )
+        plugins = discover_plugins(tmp_path)
+        assert len(plugins) == 1
+        assert plugins[0].__name__ == "MetaAuditor"
+
+    def test_plugin_with_invalid_metadata(self, tmp_path: Path) -> None:
+        """Plugin with non-dict PLUGIN_META should still load, ignoring metadata."""
+        plugin_dir = tmp_path / "matt-stack-plugins"
+        plugin_dir.mkdir()
+        (plugin_dir / "bad_meta.py").write_text(
+            "from matt_stack.auditors.base import AuditType, BaseAuditor\n\n"
+            'PLUGIN_META = "not a dict"\n\n'
+            "class BadMetaAuditor(BaseAuditor):\n"
+            "    audit_type = AuditType.QUALITY\n"
+            "    def run(self):\n"
+            "        return self.findings\n"
+        )
+        plugins = discover_plugins(tmp_path)
+        assert len(plugins) == 1
+        assert plugins[0].__name__ == "BadMetaAuditor"
+
     def test_mixed_valid_and_broken_plugins(self, tmp_path: Path) -> None:
         plugin_dir = tmp_path / "matt-stack-plugins"
         plugin_dir.mkdir()

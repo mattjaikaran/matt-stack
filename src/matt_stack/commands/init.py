@@ -18,7 +18,7 @@ from matt_stack.config import (
 from matt_stack.generators.backend_only import BackendOnlyGenerator
 from matt_stack.generators.frontend_only import FrontendOnlyGenerator
 from matt_stack.generators.fullstack import FullstackGenerator
-from matt_stack.presets import get_preset
+from matt_stack.presets import get_all_presets, get_preset
 from matt_stack.utils.console import console, print_error, print_success
 from matt_stack.utils.git import get_git_user
 from matt_stack.utils.yaml_config import load_config_file
@@ -80,7 +80,8 @@ def _run_from_preset(
     dry_run: bool = False,
 ) -> None:
     """Generate from a named preset."""
-    preset = get_preset(preset_name)
+    all_presets = get_all_presets()
+    preset = all_presets.get(preset_name) or get_preset(preset_name)
     if preset is None:
         print_error(f"Unknown preset: {preset_name}")
         print_error("Run 'matt-stack info' to see available presets")
