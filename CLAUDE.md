@@ -20,9 +20,11 @@ matt-stack add ios               # Add iOS client
 matt-stack upgrade               # Pull latest boilerplate changes
 matt-stack upgrade -c backend    # Upgrade specific component
 matt-stack upgrade --dry-run     # Preview changes without applying
-matt-stack audit [path]          # Static analysis (all 4 domains)
+matt-stack audit [path]          # Static analysis (all 5 domains)
 matt-stack audit -t quality      # Single domain
+matt-stack audit -t dependencies # Dependency version checks
 matt-stack audit --json          # Machine-readable
+matt-stack audit --html          # Browsable HTML dashboard
 matt-stack audit --fix           # Auto-remove debug statements
 matt-stack audit -s error        # Filter by minimum severity
 matt-stack doctor                # Check environment
@@ -33,7 +35,7 @@ matt-stack info                  # Show presets and repos
 
 ```
 src/matt_stack/
-├── cli.py              # Typer app — 8 commands: init, add, upgrade, audit, doctor, info, presets, version
+├── cli.py              # Typer app — 8 commands: init, add, upgrade, audit (--html), doctor, info, presets, version
 ├── config.py           # ProjectType, Variant, FrontendFramework, DeploymentTarget enums
 │                       # ProjectConfig dataclass (13 fields, 8 computed properties)
 │                       # REPO_URLS dict, normalize_name(), to_python_package()
@@ -44,7 +46,7 @@ src/matt_stack/
 │   ├── init.py         # run_init() — 3 modes: config-file → preset → interactive wizard
 │   ├── add.py          # run_add() — add frontend/backend/ios to existing project
 │   ├── upgrade.py      # run_upgrade() — pull latest boilerplate changes, diff + apply
-│   ├── audit.py        # run_audit() — orchestrates 4 auditor classes, writes report
+│   ├── audit.py        # run_audit() — orchestrates 5 auditor classes + plugins, writes report
 │   ├── doctor.py       # run_doctor() — checks python, git, uv, bun, make, docker, ports
 │   └── info.py         # run_info() — 3 tables: presets, repos, examples
 │
@@ -54,26 +56,32 @@ src/matt_stack/
 │   ├── fullstack.py    # FullstackGenerator: 8 steps (9 with iOS)
 │   ├── backend_only.py # BackendOnlyGenerator: 6 steps
 │   ├── frontend_only.py# FrontendOnlyGenerator: 5 steps
-│   └── ios.py          # add_ios_to_project() helper
+│   └── ios.py          # add_ios_to_project() + MyApp rename customization
 │
 ├── auditors/
-│   ├── base.py         # Severity (error/warning/info), AuditType (types/quality/endpoints/tests)
+│   ├── base.py         # Severity (error/warning/info), AuditType (types/quality/endpoints/tests/dependencies)
 │   │                   # AuditFinding, AuditConfig, BaseAuditor, AuditReport
 │   ├── types.py        # TypeSafetyAuditor — Pydantic ↔ TS interface/Zod field comparison
 │   ├── quality.py      # CodeQualityAuditor — TODOs, stubs, mock data, debug, credentials
 │   ├── endpoints.py    # EndpointAuditor — duplicate routes, missing auth, stubs, live probing
 │   ├── tests.py        # CoverageAuditor — coverage gaps, naming, feature mapping
-│   └── report.py       # print_report() (Rich table), print_json(), write_todo() (idempotent)
+│   ├── dependencies.py # DependencyAuditor — unpinned, deprecated, duplicates, version conflicts
+│   ├── report.py       # print_report() (Rich table), print_json(), write_todo() (idempotent)
+│   ├── html_report.py  # generate_html_report() — standalone HTML dashboard with inline CSS/JS
+│   └── plugins.py      # discover_plugins() — loads BaseAuditor subclasses from matt-stack-plugins/
 │
 ├── parsers/
 │   ├── python_schemas.py    # PydanticSchema/PydanticField, parse_pydantic_file(), find_schema_files()
 │   ├── typescript_types.py  # TSInterface/TSField, parse_typescript_file(), find_typescript_type_files()
 │   ├── zod_schemas.py       # ZodSchema/ZodField, parse_zod_file(), find_zod_files()
 │   ├── django_routes.py     # Route, parse_routes_file(), find_route_files()
-│   └── test_files.py        # TestCase/TestSuite, parse_pytest_file(), parse_vitest_file()
+│   ├── test_files.py        # TestCase/TestSuite, parse_pytest_file(), parse_vitest_file()
+│   └── dependencies.py      # Dependency/DependencyManifest, parse_pyproject_toml(), parse_package_json()
 │
 ├── post_processors/    # customizer (rename), frontend_config (monorepo), b2b (instructions)
-├── templates/          # f-string functions: makefile, docker_compose, env, readme, gitignore, claude_md
+├── templates/          # f-string functions (all conditional on feature flags):
+│                       # makefile, docker_compose, env, readme, gitignore, claude_md
+│                       # pre_commit_config, docker_compose_override
 │                       # deploy_railway, deploy_render, deploy_vercel
 └── utils/              # console (Rich helpers), git, docker, process, yaml_config
 ```
@@ -85,8 +93,10 @@ src/matt_stack/
 3. **ProjectConfig** is the single config object passed everywhere. Computed properties: `has_backend`, `has_frontend`, `is_fullstack`, `is_b2b`, `backend_dir`, `frontend_dir`.
 4. **Parsers are pure functions** — regex-based, no AST, no new dependencies. Each returns dataclasses.
 5. **Auditors inherit BaseAuditor**. Each has `run() → list[AuditFinding]`, uses `self.add_finding()`.
-6. **Report writer** uses `<!-- audit:start -->` / `<!-- audit:end -->` markers for idempotent todo.md updates.
-7. **Lazy imports** in `cli.py` — each command imports its module only when invoked.
+6. **Plugins** — custom auditors in `matt-stack-plugins/` are auto-discovered via `importlib.util`.
+7. **Report writer** uses `<!-- audit:start -->` / `<!-- audit:end -->` markers for idempotent todo.md updates.
+8. **HTML report** — `--html` generates standalone dashboard with inline CSS/JS, filter buttons, severity badges.
+9. **Lazy imports** in `cli.py` — each command imports its module only when invoked.
 
 ## Common Workflows
 
@@ -113,7 +123,7 @@ src/matt_stack/
 
 ```bash
 uv sync                        # Install
-uv run pytest -x -q            # Tests (294 tests)
+uv run pytest -x -q            # Tests (364 tests)
 uv run ruff check src/ tests/  # Lint
 uv run ruff format src/ tests/ # Format
 uv run matt-stack init test --preset starter-fullstack -o /tmp  # E2E test

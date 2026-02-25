@@ -40,6 +40,8 @@ matt-stack init my-app --preset b2b-fullstack -o ~/projects
 | Command | Description |
 |---------|-------------|
 | `matt-stack init [name]` | Create a new project from boilerplates |
+| `matt-stack add <component>` | Add frontend/backend/ios to existing project |
+| `matt-stack upgrade` | Pull latest boilerplate changes into project |
 | `matt-stack audit [path]` | Run static analysis on a generated project |
 | `matt-stack doctor` | Check your development environment |
 | `matt-stack info` | Show available presets and source repos |
@@ -61,15 +63,33 @@ matt-stack init my-app --preset b2b-fullstack -o ~/projects
 | `--output, -o` | Output directory (default: current) |
 | `--dry-run` | Preview what would be generated without writing files |
 
+### `add` Options
+
+| Flag | Description |
+|------|-------------|
+| `--path, -p` | Project path (default: current directory) |
+| `--framework, -f` | Frontend framework: `react-vite`, `react-vite-starter` |
+| `--dry-run` | Preview what would be added |
+
+### `upgrade` Options
+
+| Flag | Description |
+|------|-------------|
+| `--component, -c` | Upgrade specific component: `backend`, `frontend` |
+| `--dry-run` | Preview changes without applying them |
+| `--force` | Overwrite modified files (use with caution) |
+
 ### `audit` Options
 
 | Flag | Description |
 |------|-------------|
-| `--type, -t` | Audit type(s): `types`, `quality`, `endpoints`, `tests` |
+| `--type, -t` | Audit type(s): `types`, `quality`, `endpoints`, `tests`, `dependencies` |
+| `--severity, -s` | Minimum severity: `error`, `warning`, `info` |
 | `--live` | Enable live endpoint probing (GET only, safe) |
 | `--base-url` | Base URL for live probing (default: `http://localhost:8000`) |
 | `--no-todo` | Skip writing to `tasks/todo.md` |
 | `--json` | Machine-readable JSON output |
+| `--html` | Generate browsable HTML dashboard report |
 | `--fix` | Auto-remove debug statements (`print()`, `console.log()`) |
 
 ```bash
@@ -140,22 +160,48 @@ Scans all `.py`, `.ts`, `.tsx`, `.js`, `.jsx` files for:
 - Reports empty test files and naming issues
 - Suggests user story groupings for sparse areas
 
+### 5. `dependencies` — Version compatibility
+
+- Parses `pyproject.toml` (regex-based) and `package.json` for dependency info
+- Finds unpinned dependencies (no version constraint)
+- Detects overly broad constraints (`>=` without upper bound)
+- Warns about deprecated packages (`nose`, `mock`, `moment`, `tslint`, etc.)
+- Catches duplicate dependencies across regular/dev
+- Flags TypeScript version conflicts across manifests
+
+### Custom Auditors (Plugin System)
+
+Drop `.py` files into `matt-stack-plugins/` in your project root to add custom audit rules. Each file should export a class that inherits `BaseAuditor`:
+
+```python
+from matt_stack.auditors.base import AuditType, BaseAuditor, Severity
+
+class MyCustomAuditor(BaseAuditor):
+    audit_type = AuditType.QUALITY  # or any AuditType
+
+    def run(self):
+        # your custom checks here
+        return self.findings
+```
+
 ## Generated Project Structure
 
 ```
 my-app/
-├── backend/          # Django Ninja API
-├── frontend/         # React + Vite + TanStack Router
-├── ios/              # Swift iOS client (optional)
+├── backend/                          # Django Ninja API
+├── frontend/                         # React + Vite + TanStack Router
+├── ios/                              # Swift iOS client (optional, auto-renamed)
 ├── docker-compose.yml
 ├── docker-compose.prod.yml
-├── Makefile          # All commands: setup, up, test, lint, format
+├── docker-compose.override.yml.example  # Per-developer customization
+├── .pre-commit-config.yaml           # ruff + prettier hooks
+├── Makefile                          # All commands: setup, up, test, lint, format
 ├── .env.example
 ├── .gitignore
-├── CLAUDE.md         # AI assistant context
+├── CLAUDE.md                         # AI assistant context
 ├── README.md
 └── tasks/
-    └── todo.md       # Audit findings land here
+    └── todo.md                       # Audit findings land here
 ```
 
 ## Source Repositories
@@ -176,6 +222,8 @@ src/matt_stack/
 ├── presets.py           # 6 preset definitions
 ├── commands/
 │   ├── init.py         # Interactive wizard + routing
+│   ├── add.py          # Add components to existing projects
+│   ├── upgrade.py      # Pull latest boilerplate changes
 │   ├── audit.py        # Audit orchestrator
 │   ├── doctor.py       # Environment validation
 │   └── info.py         # Preset display
@@ -184,33 +232,40 @@ src/matt_stack/
 │   ├── fullstack.py    # 8-step fullstack generation
 │   ├── backend_only.py # 6-step backend generation
 │   ├── frontend_only.py# 5-step frontend generation
-│   └── ios.py          # iOS helper
+│   └── ios.py          # iOS helper (auto-renames MyApp references)
 ├── auditors/
 │   ├── base.py         # AuditFinding, AuditConfig, BaseAuditor
 │   ├── types.py        # Pydantic ↔ TS/Zod comparison
 │   ├── quality.py      # TODOs, stubs, debug, credentials
 │   ├── endpoints.py    # Route analysis + live probing
 │   ├── tests.py        # Coverage gaps + feature mapping
-│   └── report.py       # Rich tables + todo.md writer
+│   ├── dependencies.py # pyproject.toml + package.json checks
+│   ├── report.py       # Rich tables + todo.md writer
+│   ├── html_report.py  # Standalone HTML dashboard export
+│   └── plugins.py      # Custom auditor plugin loader
 ├── parsers/
 │   ├── python_schemas.py    # Pydantic class parser
 │   ├── typescript_types.py  # TS interface parser
 │   ├── zod_schemas.py       # Zod z.object() parser
 │   ├── django_routes.py     # Route decorator parser
-│   └── test_files.py        # pytest/vitest parser
+│   ├── test_files.py        # pytest/vitest parser
+│   └── dependencies.py      # pyproject.toml + package.json parser
 ├── post_processors/
 │   ├── customizer.py   # Rename backend/frontend
 │   ├── frontend_config.py # Monorepo .env + vite config
 │   └── b2b.py          # B2B feature instructions
-├── templates/           # f-string template functions
-└── utils/               # console, git, docker, process
+├── templates/           # f-string template functions (all conditional on feature flags)
+│                        # makefile, docker_compose, env, readme, gitignore, claude_md
+│                        # pre_commit_config, docker_compose_override
+│                        # deploy_railway, deploy_render, deploy_vercel
+└── utils/               # console, git, docker, process, yaml_config
 ```
 
 ## Development
 
 ```bash
 uv sync                        # Install dependencies
-uv run pytest                  # Run tests (176+ tests)
+uv run pytest -x -q            # Run tests (364 tests)
 uv run pytest --cov            # With coverage
 uv run ruff check src/ tests/  # Lint
 uv run ruff format src/ tests/ # Format
