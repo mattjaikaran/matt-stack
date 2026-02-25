@@ -112,6 +112,18 @@ def run_audit(
         if not json_output and findings:
             console.print(f"  Found {len(findings)} issues")
 
+    # Run plugins
+    from matt_stack.auditors.plugins import discover_plugins
+
+    plugin_classes = discover_plugins(project_path)
+    for plugin_cls in plugin_classes:
+        if not json_output:
+            print_info(f"Running plugin: {plugin_cls.__name__}...")
+        auditor = plugin_cls(config)
+        findings = auditor.run()
+        report.findings.extend(findings)
+        report.auditors_run.append(f"plugin:{plugin_cls.__name__}")
+
     # Filter findings by minimum severity
     if config.min_severity is not None:
         min_order = SEVERITY_ORDER[config.min_severity]
