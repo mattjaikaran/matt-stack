@@ -27,6 +27,34 @@ matt-stack audit --json          # Machine-readable
 matt-stack audit --html          # Browsable HTML dashboard
 matt-stack audit --fix           # Auto-remove debug statements
 matt-stack audit -s error        # Filter by minimum severity
+matt-stack client add react      # Add frontend package (bun by default)
+matt-stack client add zod -D     # Add as dev dependency
+matt-stack client remove axios   # Remove a package
+matt-stack client install        # Install all deps
+matt-stack client run dev        # Run a package.json script
+matt-stack client dev            # Start frontend dev server
+matt-stack client build          # Production build
+matt-stack client exec tsc       # Run binary (bunx/npx)
+matt-stack client which          # Show detected package manager
+matt-stack client add react --pm npm  # Override package manager
+matt-stack dev                   # Start all services (docker + backend + frontend)
+matt-stack dev --services backend,frontend  # Start specific services
+matt-stack dev --no-docker       # Skip Docker infrastructure
+matt-stack test                  # Run tests across backend and frontend
+matt-stack test --backend-only   # Run backend tests only
+matt-stack test --coverage       # Run with coverage
+matt-stack test --parallel       # Run backend + frontend in parallel
+matt-stack lint                  # Run linters across backend and frontend
+matt-stack lint --fix            # Auto-fix lint issues
+matt-stack lint --format-check   # Also check formatting
+matt-stack env check             # Compare .env.example vs .env
+matt-stack env sync              # Copy missing vars from .env.example
+matt-stack env show              # Show env vars (values masked)
+matt-stack context               # Dump project context for AI agents
+matt-stack context --json        # JSON output for programmatic use
+matt-stack context -o ctx.md     # Write context to file
+matt-stack completions           # Shell completion instructions
+matt-stack completions --install # Install bash/zsh/fish completions
 matt-stack doctor                # Check environment
 matt-stack info                  # Show presets and repos
 ```
@@ -35,7 +63,7 @@ matt-stack info                  # Show presets and repos
 
 ```
 src/matt_stack/
-├── cli.py              # Typer app — 8 commands: init, add, upgrade, audit (--html), doctor, info, presets, version
+├── cli.py              # Typer app — 16 commands: init, add, upgrade, audit, dev, test, lint, env, client (subgroup), context, config, completions, doctor, info, presets, version
 ├── config.py           # ProjectType, Variant, FrontendFramework, DeploymentTarget enums
 │                       # ProjectConfig dataclass (13 fields, 9 computed properties incl. is_nextjs)
 │                       # REPO_URLS dict, normalize_name(), to_python_package()
@@ -46,9 +74,17 @@ src/matt_stack/
 │   ├── init.py         # run_init() — 3 modes: config-file → preset → interactive wizard
 │   ├── add.py          # run_add() — add frontend/backend/ios to existing project
 │   ├── upgrade.py      # run_upgrade() — pull latest boilerplate changes, diff + apply
-│   ├── audit.py        # run_audit() — orchestrates 5 auditor classes + plugins, writes report
+│   ├── audit.py        # run_audit() — orchestrates 6 auditor classes + plugins, writes report
+│   ├── dev.py          # run_dev() — start docker, backend, frontend dev servers
+│   ├── test.py         # run_test() — unified pytest + vitest/jest runner
+│   ├── lint.py         # run_lint() — unified ruff + eslint runner
+│   ├── env.py          # run_env() — check/sync/show .env files
 │   ├── doctor.py       # run_doctor() — checks python, git, uv, bun, make, docker, ports
-│   └── info.py         # run_info() — 3 tables: presets, repos, examples
+│   ├── info.py         # run_info() — 3 tables: presets, repos, examples
+│   ├── client.py       # client_app Typer subgroup — add/remove/install/run/dev/build/exec/which
+│   ├── context.py      # run_context() — dump project context as markdown/JSON for AI agents
+│   ├── version.py      # run_version() — version display + PyPI update check
+│   └── completions.py  # run_completions() — shell completion installer
 │
 ├── generators/
 │   ├── base.py         # BaseGenerator: create_root_directory, clone_and_strip, write_file,
@@ -84,7 +120,7 @@ src/matt_stack/
 │                       # makefile, docker_compose, env, readme, gitignore, claude_md
 │                       # pre_commit_config, docker_compose_override
 │                       # deploy_railway, deploy_render, deploy_cloudflare, deploy_digitalocean
-└── utils/              # console (Rich helpers), git, docker, process, yaml_config
+└── utils/              # console (Rich helpers), git, docker, process, yaml_config, package_manager
 ```
 
 ## Key Patterns
@@ -124,7 +160,7 @@ src/matt_stack/
 
 ```bash
 uv sync                        # Install
-uv run pytest -x -q            # Tests (505 tests)
+uv run pytest -x -q            # Tests (586 tests)
 uv run ruff check src/ tests/  # Lint
 uv run ruff format src/ tests/ # Format
 uv run matt-stack init test --preset starter-fullstack -o /tmp  # E2E test

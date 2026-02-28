@@ -7,7 +7,6 @@ from typing import Annotated
 
 import typer
 
-from matt_stack import __version__
 from matt_stack.commands.client import client_app
 
 app = typer.Typer(
@@ -264,6 +263,114 @@ def config_cmd(
 
 
 @app.command()
+def dev(
+    path: Annotated[
+        Path | None,
+        typer.Option("--path", "-p", help="Project path"),
+    ] = None,
+    services: Annotated[
+        str | None,
+        typer.Option("--services", "-s", help="Services to start: backend,frontend,docker"),
+    ] = None,
+    no_docker: Annotated[
+        bool,
+        typer.Option("--no-docker", help="Skip Docker infrastructure"),
+    ] = False,
+) -> None:
+    """Start all development services (docker, backend, frontend)."""
+    from matt_stack.commands.dev import run_dev
+
+    run_dev(path=path or Path.cwd(), services=services, no_docker=no_docker)
+
+
+@app.command("test")
+def test_cmd(
+    path: Annotated[
+        Path | None,
+        typer.Option("--path", "-p", help="Project path"),
+    ] = None,
+    backend_only: Annotated[
+        bool,
+        typer.Option("--backend-only", help="Run backend tests only"),
+    ] = False,
+    frontend_only: Annotated[
+        bool,
+        typer.Option("--frontend-only", help="Run frontend tests only"),
+    ] = False,
+    coverage: Annotated[
+        bool,
+        typer.Option("--coverage", help="Run with coverage"),
+    ] = False,
+    parallel: Annotated[
+        bool,
+        typer.Option("--parallel", help="Run backend and frontend tests in parallel"),
+    ] = False,
+) -> None:
+    """Run tests across backend and frontend."""
+    from matt_stack.commands.test import run_test
+
+    run_test(
+        path=path or Path.cwd(),
+        backend_only=backend_only,
+        frontend_only=frontend_only,
+        coverage=coverage,
+        parallel=parallel,
+    )
+
+
+@app.command()
+def lint(
+    path: Annotated[
+        Path | None,
+        typer.Option("--path", "-p", help="Project path"),
+    ] = None,
+    fix: Annotated[
+        bool,
+        typer.Option("--fix", help="Auto-fix lint issues"),
+    ] = False,
+    format_check: Annotated[
+        bool,
+        typer.Option("--format-check", help="Check formatting"),
+    ] = False,
+    backend_only: Annotated[
+        bool,
+        typer.Option("--backend-only", help="Lint backend only"),
+    ] = False,
+    frontend_only: Annotated[
+        bool,
+        typer.Option("--frontend-only", help="Lint frontend only"),
+    ] = False,
+) -> None:
+    """Run linters across backend and frontend."""
+    from matt_stack.commands.lint import run_lint
+
+    run_lint(
+        path=path or Path.cwd(),
+        fix=fix,
+        format_check=format_check,
+        backend_only=backend_only,
+        frontend_only=frontend_only,
+    )
+
+
+@app.command()
+def env(
+    action: Annotated[
+        str,
+        typer.Argument(help="Action: check, sync, show"),
+    ] = "check",
+    path: Annotated[
+        Path | None,
+        typer.Option("--path", "-p", help="Project path"),
+    ] = None,
+) -> None:
+    """Manage environment variables (.env files)."""
+    from matt_stack.commands.env import run_env
+
+    run_env(action=action, path=path or Path.cwd())
+
+
+@app.command()
 def context(
     path: Annotated[
         Path | None,
@@ -287,7 +394,24 @@ def context(
 @app.command()
 def version() -> None:
     """Show matt-stack version."""
-    typer.echo(f"matt-stack {__version__}")
+    from matt_stack.commands.version import run_version
+
+    run_version()
+
+
+@app.command()
+def completions(
+    install: Annotated[
+        bool, typer.Option("--install", help="Install shell completions")
+    ] = False,
+    show: Annotated[
+        bool, typer.Option("--show", help="Show completion script")
+    ] = False,
+) -> None:
+    """Manage shell completions (bash/zsh/fish)."""
+    from matt_stack.commands.completions import run_completions
+
+    run_completions(install=install, show=show)
 
 
 if __name__ == "__main__":

@@ -43,16 +43,24 @@ matt-stack init my-app --preset b2b-fullstack -o ~/projects
 | `matt-stack add <component>` | Add frontend/backend/ios to existing project |
 | `matt-stack upgrade` | Pull latest boilerplate changes into project |
 | `matt-stack audit [path]` | Run static analysis on a generated project |
+| `matt-stack dev` | Start all development services (docker, backend, frontend) |
+| `matt-stack test` | Run tests across backend and frontend |
+| `matt-stack lint` | Run linters across backend and frontend |
+| `matt-stack env [action]` | Manage environment variables (.env files) |
 | `matt-stack doctor` | Check your development environment |
 | `matt-stack info` | Show available presets and source repos |
+| `matt-stack context [path]` | Dump project context for AI agents |
+| `matt-stack client <cmd>` | Frontend package manager wrapper (bun/npm/yarn/pnpm) |
 | `matt-stack config [action]` | Manage user config (show/path/init) |
-| `matt-stack version` | Show version |
+| `matt-stack completions` | Install shell completions (bash/zsh/fish) |
+| `matt-stack version` | Show version (with update check) |
 
 ### Global Options
 
 | Flag | Description |
 |------|-------------|
 | `--verbose, -v` | Show detailed output for debugging |
+| `--quiet, -q` | Suppress non-essential output (for CI) |
 
 ### `init` Options
 
@@ -114,6 +122,143 @@ matt-stack audit --json
 
 # Auto-fix debug statements
 matt-stack audit -t quality --fix
+
+# HTML dashboard
+matt-stack audit --html
+```
+
+### `dev` Options
+
+| Flag | Description |
+|------|-------------|
+| `--path, -p` | Project path (default: current directory) |
+| `--services, -s` | Comma-separated services to start: `backend,frontend,docker` |
+| `--no-docker` | Skip Docker infrastructure |
+
+```bash
+# Start everything (docker + backend + frontend)
+matt-stack dev
+
+# Backend only
+matt-stack dev --services backend
+
+# Skip Docker, just start app servers
+matt-stack dev --no-docker
+```
+
+### `test` Options
+
+| Flag | Description |
+|------|-------------|
+| `--path, -p` | Project path (default: current directory) |
+| `--backend-only` | Run backend tests only |
+| `--frontend-only` | Run frontend tests only |
+| `--coverage` | Run with coverage reporting |
+| `--parallel` | Run backend and frontend tests concurrently |
+
+```bash
+# Run all tests
+matt-stack test
+
+# Backend only with coverage
+matt-stack test --backend-only --coverage
+
+# Run both in parallel
+matt-stack test --parallel
+```
+
+### `lint` Options
+
+| Flag | Description |
+|------|-------------|
+| `--path, -p` | Project path (default: current directory) |
+| `--fix` | Auto-fix lint issues |
+| `--format-check` | Also check formatting (ruff format) |
+| `--backend-only` | Lint backend only |
+| `--frontend-only` | Lint frontend only |
+
+```bash
+# Check all
+matt-stack lint
+
+# Auto-fix everything
+matt-stack lint --fix
+
+# Check formatting too
+matt-stack lint --format-check
+```
+
+### `env` Actions
+
+| Action | Description |
+|--------|-------------|
+| `check` (default) | Compare `.env.example` vs `.env`, report missing/extra vars |
+| `sync` | Copy missing vars from `.env.example` into `.env` |
+| `show` | Display current `.env` vars with masked values |
+
+```bash
+# Check for missing env vars
+matt-stack env check
+
+# Auto-sync missing vars from .env.example
+matt-stack env sync
+
+# Show current env vars (values masked)
+matt-stack env show
+```
+
+### `context` Options
+
+| Flag | Description |
+|------|-------------|
+| `--json` | Output as JSON instead of markdown |
+| `--output, -o` | Write context to a file |
+
+```bash
+# Dump project context for AI agents
+matt-stack context
+
+# Write to file
+matt-stack context -o context.md
+```
+
+### `client` Subcommands
+
+Unified frontend package manager wrapper — auto-detects bun/npm/yarn/pnpm from lockfiles.
+
+| Subcommand | Description |
+|------------|-------------|
+| `client add <packages>` | Add packages (`-D` for dev) |
+| `client remove <packages>` | Remove packages |
+| `client install` | Install all dependencies |
+| `client run <script>` | Run a package.json script |
+| `client dev` | Start frontend dev server |
+| `client build` | Build for production |
+| `client exec <binary>` | Run binary (bunx/npx) |
+| `client which` | Show detected package manager |
+
+```bash
+# Add a dependency
+matt-stack client add zustand
+
+# Run a script
+matt-stack client run generate
+
+# Check which package manager
+matt-stack client which
+```
+
+### `completions`
+
+```bash
+# Show instructions
+matt-stack completions
+
+# Install for your shell (bash/zsh/fish)
+matt-stack completions --install
+
+# Show completion script
+matt-stack completions --show
 ```
 
 ## Presets
@@ -171,6 +316,12 @@ Scans all `.py`, `.ts`, `.tsx`, `.js`, `.jsx` files for:
 - Warns about deprecated packages (`nose`, `mock`, `moment`, `tslint`, etc.)
 - Catches duplicate dependencies across regular/dev
 - Flags TypeScript version conflicts across manifests
+
+### 6. `vulnerabilities` — Known CVEs
+
+- Runs `pip-audit` (Python) and `npm audit` (JS) if available
+- Falls back to OSV API for vulnerability lookup
+- Reports known CVEs with severity and fix versions
 
 ### Custom Auditors (Plugin System)
 
@@ -240,14 +391,22 @@ The iOS client is cloned from [swift-ios-starter](https://github.com/mattjaikara
 src/matt_stack/
 ├── cli.py              # Typer app — all commands
 ├── config.py           # Enums, ProjectConfig, REPO_URLS
-├── presets.py           # 6 preset definitions
+├── presets.py           # 8 preset definitions
 ├── commands/
 │   ├── init.py         # Interactive wizard + routing
 │   ├── add.py          # Add components to existing projects
 │   ├── upgrade.py      # Pull latest boilerplate changes
 │   ├── audit.py        # Audit orchestrator
+│   ├── dev.py          # Unified dev server start
+│   ├── test.py         # Unified test runner
+│   ├── lint.py         # Unified linter
+│   ├── env.py          # Environment variable management
+│   ├── context.py      # AI agent context dump
+│   ├── client.py       # Frontend package manager wrapper
 │   ├── doctor.py       # Environment validation
-│   └── info.py         # Preset display
+│   ├── info.py         # Preset display
+│   ├── version.py      # Version + update check
+│   └── completions.py  # Shell completion installer
 ├── generators/
 │   ├── base.py         # BaseGenerator (clone, strip, write)
 │   ├── fullstack.py    # 8-step fullstack generation
@@ -255,15 +414,16 @@ src/matt_stack/
 │   ├── frontend_only.py# 5-step frontend generation
 │   └── ios.py          # iOS helper (auto-renames MyApp references)
 ├── auditors/
-│   ├── base.py         # AuditFinding, AuditConfig, BaseAuditor
-│   ├── types.py        # Pydantic ↔ TS/Zod comparison
-│   ├── quality.py      # TODOs, stubs, debug, credentials
-│   ├── endpoints.py    # Route analysis + live probing
-│   ├── tests.py        # Coverage gaps + feature mapping
-│   ├── dependencies.py # pyproject.toml + package.json checks
-│   ├── report.py       # Rich tables + todo.md writer
-│   ├── html_report.py  # Standalone HTML dashboard export
-│   └── plugins.py      # Custom auditor plugin loader
+│   ├── base.py             # AuditFinding, AuditConfig, BaseAuditor
+│   ├── types.py            # Pydantic ↔ TS/Zod comparison
+│   ├── quality.py          # TODOs, stubs, debug, credentials
+│   ├── endpoints.py        # Route analysis + live probing
+│   ├── tests.py            # Coverage gaps + feature mapping
+│   ├── dependencies.py     # pyproject.toml + package.json checks
+│   ├── vulnerabilities.py  # CVE scanning (pip-audit, npm audit, OSV)
+│   ├── report.py           # Rich tables + todo.md writer
+│   ├── html_report.py      # Standalone HTML dashboard export
+│   └── plugins.py          # Custom auditor plugin loader
 ├── parsers/
 │   ├── python_schemas.py    # Pydantic class parser
 │   ├── typescript_types.py  # TS interface parser
@@ -299,7 +459,7 @@ matt-stack config show   # View current config
 
 ```bash
 uv sync                        # Install dependencies
-uv run pytest -x -q            # Run tests (364 tests)
+uv run pytest -x -q            # Run tests (586 tests)
 uv run pytest --cov            # With coverage
 uv run ruff check src/ tests/  # Lint
 uv run ruff format src/ tests/ # Format
