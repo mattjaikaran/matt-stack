@@ -371,6 +371,31 @@ def env(
 
 
 @app.command()
+def rules(
+    path: Annotated[
+        Path | None,
+        typer.Option("--path", "-p", help="Project path"),
+    ] = None,
+    gsd: Annotated[
+        bool,
+        typer.Option("--gsd", help="Also generate GSD planning files (.planning/)"),
+    ] = False,
+    dry_run: Annotated[
+        bool,
+        typer.Option("--dry-run", help="Preview what would be generated"),
+    ] = False,
+    force: Annotated[
+        bool,
+        typer.Option("--force", help="Overwrite existing files"),
+    ] = False,
+) -> None:
+    """Generate AI agent config files (CLAUDE.md, .cursorrules, GSD)."""
+    from matt_stack.commands.rules import run_rules
+
+    run_rules(path=path or Path.cwd(), gsd=gsd, dry_run=dry_run, force=force)
+
+
+@app.command()
 def context(
     path: Annotated[
         Path | None,

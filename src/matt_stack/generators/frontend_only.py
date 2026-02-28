@@ -7,6 +7,7 @@ from collections.abc import Callable
 from matt_stack.config import DeploymentTarget
 from matt_stack.generators.base import BaseGenerator
 from matt_stack.post_processors.customizer import customize_frontend
+from matt_stack.templates.cursorrules import generate_cursorrules
 from matt_stack.templates.pre_commit_config import generate_pre_commit_config
 from matt_stack.templates.root_gitignore import generate_gitignore
 from matt_stack.templates.root_makefile import generate_makefile
@@ -38,6 +39,7 @@ class FrontendOnlyGenerator(BaseGenerator):
         try:
             self.write_file("Makefile", generate_makefile(self.config))
             self.write_file("README.md", generate_readme(self.config))
+            self.write_file(".cursorrules", generate_cursorrules(self.config))
             self.write_file(".gitignore", generate_gitignore(self.config))
 
             if self.config.deployment == DeploymentTarget.FLY_IO:

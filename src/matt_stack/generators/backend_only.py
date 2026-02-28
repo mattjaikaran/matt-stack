@@ -12,6 +12,7 @@ from matt_stack.templates.docker_compose import generate_docker_compose
 from matt_stack.templates.docker_compose_override import generate_docker_compose_override
 from matt_stack.templates.docker_compose_prod import generate_docker_compose_prod
 from matt_stack.templates.pre_commit_config import generate_pre_commit_config
+from matt_stack.templates.cursorrules import generate_cursorrules
 from matt_stack.templates.root_claude_md import generate_claude_md
 from matt_stack.templates.root_env import generate_env_example
 from matt_stack.templates.root_gitignore import generate_gitignore
@@ -54,6 +55,7 @@ class BackendOnlyGenerator(BaseGenerator):
             self.write_file(".env", generate_env_example(self.config))
             self.write_file("README.md", generate_readme(self.config))
             self.write_file("CLAUDE.md", generate_claude_md(self.config))
+            self.write_file(".cursorrules", generate_cursorrules(self.config))
             self.write_file(".gitignore", generate_gitignore(self.config))
             self.write_file("tasks/todo.md", f"# {self.config.display_name} TODO\n")
 
