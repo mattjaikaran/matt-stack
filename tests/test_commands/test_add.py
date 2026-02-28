@@ -20,6 +20,7 @@ from matt_stack.config import FrontendFramework, ProjectType
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _make_backend_project(path: Path) -> Path:
     """Create a minimal backend-only project structure."""
     path.mkdir(parents=True, exist_ok=True)
@@ -157,9 +158,7 @@ class TestBuildConfig:
 class TestRunAdd:
     @patch("matt_stack.commands.add.remove_git_history")
     @patch("matt_stack.commands.add.clone_repo", side_effect=_mock_clone)
-    def test_add_frontend_to_backend(
-        self, mock_clone, mock_rm_git, tmp_path: Path
-    ) -> None:
+    def test_add_frontend_to_backend(self, mock_clone, mock_rm_git, tmp_path: Path) -> None:
         proj = _make_backend_project(tmp_path / "my-app")
         run_add("frontend", proj)
         # Frontend directory should now exist (created by mock clone)
@@ -172,9 +171,7 @@ class TestRunAdd:
 
     @patch("matt_stack.commands.add.remove_git_history")
     @patch("matt_stack.commands.add.clone_repo", side_effect=_mock_clone)
-    def test_add_backend_to_frontend(
-        self, mock_clone, mock_rm_git, tmp_path: Path
-    ) -> None:
+    def test_add_backend_to_frontend(self, mock_clone, mock_rm_git, tmp_path: Path) -> None:
         proj = _make_frontend_project(tmp_path / "my-app")
         run_add("backend", proj)
         assert (proj / "backend" / "pyproject.toml").exists()
@@ -183,9 +180,7 @@ class TestRunAdd:
 
     @patch("matt_stack.commands.add.remove_git_history")
     @patch("matt_stack.commands.add.clone_repo", side_effect=_mock_clone)
-    def test_add_ios_to_fullstack(
-        self, mock_clone, mock_rm_git, tmp_path: Path
-    ) -> None:
+    def test_add_ios_to_fullstack(self, mock_clone, mock_rm_git, tmp_path: Path) -> None:
         proj = _make_fullstack_project(tmp_path / "my-app")
         run_add("ios", proj)
         assert (proj / "ios" / "Package.swift").exists()
@@ -219,9 +214,7 @@ class TestRunAdd:
 
     @patch("matt_stack.commands.add.remove_git_history")
     @patch("matt_stack.commands.add.clone_repo", side_effect=_mock_clone)
-    def test_dry_run_does_not_clone(
-        self, mock_clone, mock_rm_git, tmp_path: Path
-    ) -> None:
+    def test_dry_run_does_not_clone(self, mock_clone, mock_rm_git, tmp_path: Path) -> None:
         proj = _make_backend_project(tmp_path / "my-app")
         original_makefile = (proj / "Makefile").read_text()
         run_add("frontend", proj, dry_run=True)
@@ -233,9 +226,7 @@ class TestRunAdd:
 
     @patch("matt_stack.commands.add.remove_git_history")
     @patch("matt_stack.commands.add.clone_repo", return_value=False)
-    def test_clone_failure_raises_exit(
-        self, mock_clone, mock_rm_git, tmp_path: Path
-    ) -> None:
+    def test_clone_failure_raises_exit(self, mock_clone, mock_rm_git, tmp_path: Path) -> None:
         proj = _make_backend_project(tmp_path / "my-app")
         with pytest.raises(typer.Exit):
             run_add("frontend", proj)
@@ -264,9 +255,7 @@ class TestRunAdd:
 
     @patch("matt_stack.commands.add.remove_git_history")
     @patch("matt_stack.commands.add.clone_repo", side_effect=_mock_clone)
-    def test_add_generates_env_example(
-        self, mock_clone, mock_rm_git, tmp_path: Path
-    ) -> None:
+    def test_add_generates_env_example(self, mock_clone, mock_rm_git, tmp_path: Path) -> None:
         proj = _make_backend_project(tmp_path / "my-app")
         run_add("frontend", proj)
         assert (proj / ".env.example").exists()

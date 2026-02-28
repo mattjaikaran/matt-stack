@@ -105,7 +105,8 @@ def _customize_component(component: str, config: ProjectConfig, *, dry_run: bool
         from matt_stack.post_processors.frontend_config import setup_frontend_monorepo
 
         customize_frontend(config)
-        setup_frontend_monorepo(config)
+        if config.has_backend:
+            setup_frontend_monorepo(config)
     elif component == "backend":
         from matt_stack.post_processors.customizer import customize_backend
 

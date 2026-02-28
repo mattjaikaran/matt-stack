@@ -7,10 +7,17 @@ from pathlib import Path
 
 import pytest
 
-from matt_stack.config import DeploymentTarget, ProjectConfig, ProjectType, Variant
+from matt_stack.config import (
+    DeploymentTarget,
+    FrontendFramework,
+    ProjectConfig,
+    ProjectType,
+    Variant,
+)
+from matt_stack.templates.deploy_cloudflare import generate_wrangler_toml
+from matt_stack.templates.deploy_digitalocean import generate_do_app_spec
 from matt_stack.templates.deploy_railway import generate_railway_json, generate_railway_toml
 from matt_stack.templates.deploy_render import generate_render_yaml
-from matt_stack.templates.deploy_vercel import generate_vercel_json
 
 # --- Fixtures for deployment-specific configs ---
 
@@ -72,26 +79,6 @@ def render_backend_no_redis_config(tmp_path: Path) -> ProjectConfig:
     )
 
 
-@pytest.fixture
-def vercel_fullstack_config(tmp_path: Path) -> ProjectConfig:
-    return ProjectConfig(
-        name="my-app",
-        path=tmp_path / "my-app",
-        project_type=ProjectType.FULLSTACK,
-        variant=Variant.STARTER,
-    )
-
-
-@pytest.fixture
-def vercel_frontend_config(tmp_path: Path) -> ProjectConfig:
-    return ProjectConfig(
-        name="my-frontend",
-        path=tmp_path / "my-frontend",
-        project_type=ProjectType.FRONTEND_ONLY,
-        variant=Variant.STARTER,
-    )
-
-
 # --- Railway JSON tests ---
 
 
@@ -114,7 +101,6 @@ def test_railway_json_backend_only(railway_backend_config: ProjectConfig) -> Non
 
 def test_railway_json_is_valid_json(railway_fullstack_config: ProjectConfig) -> None:
     content = generate_railway_json(railway_fullstack_config)
-    # Should not raise
     data = json.loads(content)
     assert "$schema" in data
 
@@ -127,7 +113,7 @@ def test_railway_toml_fullstack(railway_fullstack_config: ProjectConfig) -> None
     assert "[build]" in content
     assert "[deploy]" in content
     assert "gunicorn" in content
-    assert "my_app" in content  # python_package_name
+    assert "my_app" in content
     assert "healthcheckPath" in content
 
 
@@ -135,7 +121,7 @@ def test_railway_toml_backend_only(railway_backend_config: ProjectConfig) -> Non
     content = generate_railway_toml(railway_backend_config)
     assert "[build]" in content
     assert "gunicorn" in content
-    assert "my_api" in content  # python_package_name
+    assert "my_api" in content
 
 
 def test_railway_toml_project_name_substitution(
@@ -219,47 +205,112 @@ def test_render_yaml_env_groups(render_fullstack_config: ProjectConfig) -> None:
     assert "shared-env" in content
 
 
-# --- Vercel JSON tests ---
+# --- Cloudflare tests ---
 
 
-def test_vercel_json_fullstack(vercel_fullstack_config: ProjectConfig) -> None:
-    content = generate_vercel_json(vercel_fullstack_config)
-    data = json.loads(content)
-    assert data["framework"] == "vite"
-    assert data["outputDirectory"] == "dist"
-    assert data["buildCommand"] == "bun install && bun run build"
-    # Should have API proxy rewrite for fullstack
-    sources = [r["source"] for r in data["rewrites"]]
-    assert "/api/:path*" in sources
+class TestCloudflare:
+    def test_wrangler_frontend_only(self, tmp_path: Path) -> None:
+        config = ProjectConfig(
+            name="my-app",
+            path=tmp_path / "my-app",
+            project_type=ProjectType.FRONTEND_ONLY,
+            variant=Variant.STARTER,
+            deployment=DeploymentTarget.CLOUDFLARE,
+        )
+        content = generate_wrangler_toml(config)
+        assert 'name = "my-app"' in content
+        assert "pages_build_output_dir" in content
+        assert "bun install && bun run build" in content
+
+    def test_wrangler_fullstack(self, tmp_path: Path) -> None:
+        config = ProjectConfig(
+            name="my-app",
+            path=tmp_path / "my-app",
+            project_type=ProjectType.FULLSTACK,
+            variant=Variant.STARTER,
+            deployment=DeploymentTarget.CLOUDFLARE,
+        )
+        content = generate_wrangler_toml(config)
+        assert 'name = "my-app"' in content
+        assert "VITE_API_BASE_URL" in content
+
+    def test_wrangler_fullstack_nextjs(self, tmp_path: Path) -> None:
+        config = ProjectConfig(
+            name="my-app",
+            path=tmp_path / "my-app",
+            project_type=ProjectType.FULLSTACK,
+            variant=Variant.STARTER,
+            frontend_framework=FrontendFramework.NEXTJS,
+            deployment=DeploymentTarget.CLOUDFLARE,
+        )
+        content = generate_wrangler_toml(config)
+        assert "NEXT_PUBLIC_API_BASE_URL" in content
+
+    def test_wrangler_backend_only(self, tmp_path: Path) -> None:
+        config = ProjectConfig(
+            name="my-api",
+            path=tmp_path / "my-api",
+            project_type=ProjectType.BACKEND_ONLY,
+            variant=Variant.STARTER,
+            deployment=DeploymentTarget.CLOUDFLARE,
+        )
+        content = generate_wrangler_toml(config)
+        assert "API_ORIGIN" in content
 
 
-def test_vercel_json_frontend_only(vercel_frontend_config: ProjectConfig) -> None:
-    content = generate_vercel_json(vercel_frontend_config)
-    data = json.loads(content)
-    assert data["framework"] == "vite"
-    # Should NOT have API proxy rewrite for frontend-only
-    sources = [r["source"] for r in data["rewrites"]]
-    assert "/api/:path*" not in sources
+# --- DigitalOcean tests ---
 
 
-def test_vercel_json_spa_rewrite(vercel_fullstack_config: ProjectConfig) -> None:
-    content = generate_vercel_json(vercel_fullstack_config)
-    data = json.loads(content)
-    # SPA fallback should always be present
-    destinations = [r["destination"] for r in data["rewrites"]]
-    assert "/index.html" in destinations
+class TestDigitalOcean:
+    def test_do_fullstack(self, tmp_path: Path) -> None:
+        config = ProjectConfig(
+            name="my-app",
+            path=tmp_path / "my-app",
+            project_type=ProjectType.FULLSTACK,
+            variant=Variant.STARTER,
+            deployment=DeploymentTarget.DIGITAL_OCEAN,
+        )
+        content = generate_do_app_spec(config)
+        assert "name: my-app" in content
+        assert "my-app-api" in content
+        assert "my-app-frontend" in content
+        assert "databases:" in content
+        assert "db-my-app" in content
 
+    def test_do_backend_only(self, tmp_path: Path) -> None:
+        config = ProjectConfig(
+            name="my-api",
+            path=tmp_path / "my-api",
+            project_type=ProjectType.BACKEND_ONLY,
+            variant=Variant.STARTER,
+            deployment=DeploymentTarget.DIGITAL_OCEAN,
+        )
+        content = generate_do_app_spec(config)
+        assert "my-api-api" in content
+        assert "databases:" in content
+        assert "frontend" not in content
 
-def test_vercel_json_is_valid_json(vercel_frontend_config: ProjectConfig) -> None:
-    content = generate_vercel_json(vercel_frontend_config)
-    data = json.loads(content)
-    assert "$schema" in data
+    def test_do_fullstack_nextjs(self, tmp_path: Path) -> None:
+        config = ProjectConfig(
+            name="my-app",
+            path=tmp_path / "my-app",
+            project_type=ProjectType.FULLSTACK,
+            variant=Variant.STARTER,
+            frontend_framework=FrontendFramework.NEXTJS,
+            deployment=DeploymentTarget.DIGITAL_OCEAN,
+        )
+        content = generate_do_app_spec(config)
+        assert "NEXT_PUBLIC_API_BASE_URL" in content
+        assert "my-app-frontend" in content
 
-
-def test_vercel_json_security_headers(vercel_fullstack_config: ProjectConfig) -> None:
-    content = generate_vercel_json(vercel_fullstack_config)
-    data = json.loads(content)
-    assert "headers" in data
-    header_keys = [h["key"] for h in data["headers"][0]["headers"]]
-    assert "X-Frame-Options" in header_keys
-    assert "X-Content-Type-Options" in header_keys
+    def test_do_frontend_only(self, tmp_path: Path) -> None:
+        config = ProjectConfig(
+            name="my-fe",
+            path=tmp_path / "my-fe",
+            project_type=ProjectType.FRONTEND_ONLY,
+            variant=Variant.STARTER,
+            deployment=DeploymentTarget.DIGITAL_OCEAN,
+        )
+        content = generate_do_app_spec(config)
+        assert "my-fe-frontend" in content
+        assert "databases:" not in content

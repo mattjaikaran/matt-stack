@@ -33,9 +33,12 @@ def _structure(config: ProjectConfig) -> str:
     if config.has_backend:
         parts.append("- `backend/` — Django API (django-ninja)")
     if config.has_frontend:
-        is_tanstack = config.frontend_framework.value == "react-vite"
-        fw = "TanStack Router" if is_tanstack else "React Router"
-        parts.append(f"- `frontend/` — React + Vite + TypeScript ({fw})")
+        if config.is_nextjs:
+            parts.append("- `frontend/` — Next.js (App Router, TypeScript, Tailwind)")
+        else:
+            is_tanstack = config.frontend_framework.value == "react-vite"
+            fw = "TanStack Router" if is_tanstack else "React Router"
+            parts.append(f"- `frontend/` — React + Vite + TypeScript ({fw})")
     if config.include_ios:
         parts.append("- `ios/` — SwiftUI iOS client (iOS 17+)")
 
@@ -49,7 +52,10 @@ def _tech(config: ProjectConfig) -> str:
         if config.use_celery:
             parts.append("- Background: Celery + Redis")
     if config.has_frontend:
-        parts.append("- Frontend: React 18, Vite, TypeScript (strict)")
+        if config.is_nextjs:
+            parts.append("- Frontend: Next.js (App Router), TypeScript (strict)")
+        else:
+            parts.append("- Frontend: React 18, Vite, TypeScript (strict)")
     if config.include_ios:
         parts.append("- iOS: SwiftUI, MVVM, async/await, iOS 17+")
 
@@ -76,7 +82,8 @@ def _commands(config: ProjectConfig) -> str:
         lines.append("make backend-dev    # Django dev server (port 8000)")
 
     if config.has_frontend:
-        lines.append("make frontend-dev   # Vite dev server (port 3000)")
+        label = "Next.js" if config.is_nextjs else "Vite"
+        lines.append(f"make frontend-dev   # {label} dev server (port 3000)")
 
     lines.append("```")
     return "\n".join(lines)
@@ -94,6 +101,17 @@ def _backend(config: ProjectConfig) -> str:
 
 
 def _frontend(config: ProjectConfig) -> str:
+    if config.is_nextjs:
+        return """\
+## Frontend
+
+- Package manager: `bun` (NOT npm/yarn)
+- Framework: Next.js (App Router)
+- API base: `NEXT_PUBLIC_API_BASE_URL` env var
+- Styling: Tailwind CSS
+- Routing: App Router (file-based)
+- API routes: `app/api/` directory"""
+
     return """\
 ## Frontend
 

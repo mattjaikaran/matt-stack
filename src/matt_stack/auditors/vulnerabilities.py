@@ -144,10 +144,12 @@ class VulnerabilityAuditor(BaseAuditor):
         if not clean_version:
             return
 
-        payload = json.dumps({
-            "package": {"name": package_name, "ecosystem": ecosystem},
-            "version": clean_version,
-        }).encode()
+        payload = json.dumps(
+            {
+                "package": {"name": package_name, "ecosystem": ecosystem},
+                "version": clean_version,
+            }
+        ).encode()
 
         req = Request(
             "https://api.osv.dev/v1/query",
@@ -171,8 +173,7 @@ class VulnerabilityAuditor(BaseAuditor):
                 sev,
                 self._rel(manifest),
                 line,
-                f"Known vulnerability in {package_name} {clean_version}: "
-                f"{vuln_id} — {summary}",
+                f"Known vulnerability in {package_name} {clean_version}: {vuln_id} — {summary}",
                 f"Check https://osv.dev/vulnerability/{vuln_id}",
             )
 

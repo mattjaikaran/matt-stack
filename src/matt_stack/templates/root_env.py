@@ -45,16 +45,27 @@ def generate_env_example(config: ProjectConfig) -> str:
             )
 
     if config.has_frontend:
-        lines.extend(
-            [
-                "# === Frontend ===",
-                "VITE_API_BASE_URL=http://localhost:8000/api/v1",
-                "VITE_MODE=django-spa",
-                "VITE_AUTH_TOKEN_KEY=access_token",
-                "VITE_REFRESH_TOKEN_KEY=refresh_token",
-                "",
-            ]
-        )
+        if config.is_nextjs:
+            lines.extend(
+                [
+                    "# === Frontend (Next.js) ===",
+                    "NEXT_PUBLIC_API_BASE_URL=http://localhost:8000/api/v1",
+                    "NEXT_PUBLIC_AUTH_TOKEN_KEY=access_token",
+                    "NEXT_PUBLIC_REFRESH_TOKEN_KEY=refresh_token",
+                    "",
+                ]
+            )
+        else:
+            lines.extend(
+                [
+                    "# === Frontend ===",
+                    "VITE_API_BASE_URL=http://localhost:8000/api/v1",
+                    "VITE_MODE=django-spa",
+                    "VITE_AUTH_TOKEN_KEY=access_token",
+                    "VITE_REFRESH_TOKEN_KEY=refresh_token",
+                    "",
+                ]
+            )
 
     lines.extend(
         [

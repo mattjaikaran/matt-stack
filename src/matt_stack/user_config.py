@@ -32,6 +32,7 @@ TEMPLATE_CONFIG = """\
 #   use_celery: true
 #   use_redis: true
 #   init_git: true
+#   package_manager: bun    # bun | npm | yarn | pnpm
 """
 
 

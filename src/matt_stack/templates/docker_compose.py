@@ -161,6 +161,25 @@ def _frontend_dev_service(config: ProjectConfig) -> str:
     depends_on:
       - api-dev"""
 
+    if config.is_nextjs:
+        env_block = ""
+        if config.has_backend:
+            env_block = """
+    environment:
+      NEXT_PUBLIC_API_BASE_URL: http://localhost:8000/api/v1"""
+        return f"""\
+  frontend-dev:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    command: bun run dev
+    ports:
+      - "${{FRONTEND_PORT:-3000}}:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+      - /app/.next{env_block}{depends}"""
+
     return f"""\
   frontend-dev:
     build:

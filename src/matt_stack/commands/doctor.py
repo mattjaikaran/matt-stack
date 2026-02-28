@@ -82,7 +82,8 @@ def run_doctor() -> None:
     table.add_row(
         "pip-audit",
         _status(pip_audit_available) if pip_audit_available else "[yellow]OPTIONAL[/yellow]",
-        get_command_version("pip-audit").split("\n")[0] if pip_audit_available
+        get_command_version("pip-audit").split("\n")[0]
+        if pip_audit_available
         else "not installed — install: uv tool install pip-audit",
     )
 
@@ -99,7 +100,7 @@ def run_doctor() -> None:
         (5432, "PostgreSQL"),
         (6379, "Redis"),
         (8000, "Django API"),
-        (3000, "Vite frontend"),
+        (3000, "Frontend dev server"),
     ]
     for port, label in ports:
         available = check_port_available(port)

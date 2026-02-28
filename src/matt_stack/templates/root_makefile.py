@@ -13,7 +13,7 @@ def generate_makefile(config: ProjectConfig) -> str:
         sections.append(_setup_fullstack(config))
         sections.append(_docker_targets(config))
         sections.append(_backend_targets())
-        sections.append(_frontend_targets())
+        sections.append(_frontend_targets(config))
         if config.include_ios:
             sections.append(_ios_targets(config))
         sections.append(_combined_targets(config))
@@ -24,8 +24,8 @@ def generate_makefile(config: ProjectConfig) -> str:
         sections.append(_backend_targets())
         sections.append(_prod_targets())
     elif config.has_frontend:
-        sections.append(_setup_frontend())
-        sections.append(_frontend_targets())
+        sections.append(_setup_frontend(config))
+        sections.append(_frontend_targets(config))
 
     return "\n".join(sections)
 
@@ -73,12 +73,13 @@ setup: ## Install backend dependencies
 \t@echo 'Setup complete!'"""
 
 
-def _setup_frontend() -> str:
-    return """
+def _setup_frontend(config: ProjectConfig) -> str:
+    install_cmd = "bun install"
+    return f"""
 .PHONY: setup
 setup: ## Install frontend dependencies
 \t@echo 'Setting up frontend...'
-\tcd frontend && bun install
+\tcd frontend && {install_cmd}
 \t@echo 'Setup complete!'"""
 
 
@@ -127,8 +128,8 @@ backend-superuser: ## Create Django superuser
 \tcd backend && uv run python manage.py createsuperuser"""
 
 
-def _frontend_targets() -> str:
-    return """
+def _frontend_targets(config: ProjectConfig) -> str:
+    return f"""
 .PHONY: frontend-setup frontend-dev frontend-build frontend-test frontend-lint
 frontend-setup: ## Install frontend deps
 \tcd frontend && bun install
@@ -139,8 +140,8 @@ frontend-dev: ## Run frontend dev server
 frontend-build: ## Build frontend
 \tcd frontend && bun run build
 
-frontend-test: ## Run frontend type check
-\tcd frontend && bun run typecheck
+frontend-test: ## Run frontend {"typecheck" if not config.is_nextjs else "lint"}
+\tcd frontend && bun run {"typecheck" if not config.is_nextjs else "lint"}
 
 frontend-lint: ## Lint frontend
 \tcd frontend && bun run lint"""

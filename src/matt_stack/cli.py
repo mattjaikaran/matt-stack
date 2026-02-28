@@ -8,6 +8,7 @@ from typing import Annotated
 import typer
 
 from matt_stack import __version__
+from matt_stack.commands.client import client_app
 
 app = typer.Typer(
     name="matt-stack",
@@ -15,6 +16,8 @@ app = typer.Typer(
     no_args_is_help=True,
     rich_markup_mode="rich",
 )
+
+app.add_typer(client_app, name="client")
 
 
 @app.callback()
@@ -92,7 +95,9 @@ def add(
     framework: Annotated[
         str | None,
         typer.Option(
-            "--framework", "-f", help="Frontend framework: react-vite, react-vite-starter"
+            "--framework",
+            "-f",
+            help="Frontend framework: react-vite, react-vite-starter, nextjs",
         ),
     ] = None,
     dry_run: Annotated[
@@ -256,6 +261,27 @@ def config_cmd(
 
         print_error(f"Unknown action: {action}. Use: show, path, init")
         raise typer.Exit(code=1)
+
+
+@app.command()
+def context(
+    path: Annotated[
+        Path | None,
+        typer.Argument(help="Project path (default: current directory)"),
+    ] = None,
+    json_output: Annotated[
+        bool,
+        typer.Option("--json", help="Output as JSON instead of markdown"),
+    ] = False,
+    output: Annotated[
+        str | None,
+        typer.Option("--output", "-o", help="Write context to a file"),
+    ] = None,
+) -> None:
+    """Dump project context for AI agents (Claude, Cursor, etc.)."""
+    from matt_stack.commands.context import run_context
+
+    run_context(path=path or Path.cwd(), json_output=json_output, output_file=output)
 
 
 @app.command()

@@ -19,8 +19,7 @@ def generate_railway_json(config: ProjectConfig) -> str:
         deploy["build"]["builder"] = "NIXPACKS"
         deploy["build"]["buildCommand"] = "pip install uv && uv sync"
         deploy["deploy"]["startCommand"] = (
-            "uv run python manage.py migrate && "
-            "uv run python manage.py runserver 0.0.0.0:$PORT"
+            "uv run python manage.py migrate && uv run python manage.py runserver 0.0.0.0:$PORT"
         )
         deploy["deploy"]["healthcheckPath"] = "/api/health/"
         deploy["deploy"]["healthcheckTimeout"] = 30

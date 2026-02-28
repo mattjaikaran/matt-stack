@@ -43,8 +43,10 @@ def _show_usage() -> None:
     examples = [
         ("matt-stack init", "Interactive wizard"),
         ("matt-stack init my-app --preset starter-fullstack", "Preset mode"),
+        ("matt-stack init my-app --preset nextjs-fullstack", "Next.js + Django"),
         ("matt-stack init my-app --preset b2b-fullstack --ios", "With iOS"),
         ("matt-stack init --config stack.yaml", "Config file"),
+        ("matt-stack add frontend --framework nextjs", "Add Next.js to existing"),
         ("matt-stack doctor", "Check environment"),
     ]
     for cmd, desc in examples:

@@ -241,3 +241,5 @@ def test_deployment_target_new_values() -> None:
     assert DeploymentTarget.GCP == "gcp"
     assert DeploymentTarget.HETZNER == "hetzner"
     assert DeploymentTarget.SELF_HOSTED == "self-hosted"
+    assert DeploymentTarget.CLOUDFLARE == "cloudflare"
+    assert DeploymentTarget.DIGITAL_OCEAN == "digital-ocean"

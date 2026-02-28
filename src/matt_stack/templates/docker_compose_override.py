@@ -33,13 +33,14 @@ def generate_docker_compose_override(config: ProjectConfig) -> str:
         )
 
     if config.has_frontend:
+        env_var = "NEXT_PUBLIC_API_BASE_URL" if config.is_nextjs else "VITE_API_BASE_URL"
         lines.extend(
             [
                 "  # frontend-dev:",
                 "  #   ports:",
                 '  #     - "3001:3000"  # Use different host port',
                 "  #   environment:",
-                '  #     VITE_API_BASE_URL: "http://localhost:8001/api/v1"',
+                f'  #     {env_var}: "http://localhost:8001/api/v1"',
                 "",
             ]
         )

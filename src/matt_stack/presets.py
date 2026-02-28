@@ -77,6 +77,21 @@ PRESETS: dict[str, Preset] = {
         frontend_framework=FrontendFramework.REACT_VITE_STARTER,
         use_celery=False,
     ),
+    "nextjs-fullstack": Preset(
+        name="nextjs-fullstack",
+        description="Fullstack monorepo (Django API + Next.js App Router)",
+        project_type=ProjectType.FULLSTACK,
+        variant=Variant.STARTER,
+        frontend_framework=FrontendFramework.NEXTJS,
+    ),
+    "nextjs-frontend": Preset(
+        name="nextjs-frontend",
+        description="Next.js standalone (App Router, TypeScript, Tailwind)",
+        project_type=ProjectType.FRONTEND_ONLY,
+        variant=Variant.STARTER,
+        frontend_framework=FrontendFramework.NEXTJS,
+        use_celery=False,
+    ),
 }
 
 

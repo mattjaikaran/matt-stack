@@ -26,6 +26,9 @@ COMPONENT_REPOS: dict[str, str] = {
     "frontend": "react-vite",
 }
 
+# Files that indicate Next.js frontend (checked during upgrade to pick correct repo)
+NEXTJS_MARKERS = {"next.config.ts", "next.config.js", "next.config.mjs"}
+
 # Files that are typically user-customized and should never be overwritten
 SKIP_FILES: set[str] = {"README.md", ".env", ".env.local", "CLAUDE.md"}
 
@@ -99,7 +102,10 @@ def run_upgrade(
 
     reports: list[UpgradeReport] = []
     for comp in components:
-        repo_key = COMPONENT_REPOS[comp]
+        if comp == "frontend":
+            repo_key = _detect_frontend_repo_key(project_path)
+        else:
+            repo_key = COMPONENT_REPOS[comp]
         report = _upgrade_component(
             project_path,
             comp,
@@ -121,6 +127,14 @@ def _detect_components(path: Path) -> list[str]:
     if (path / "frontend" / "package.json").exists():
         components.append("frontend")
     return components
+
+
+def _detect_frontend_repo_key(project_path: Path) -> str:
+    """Detect which frontend boilerplate repo to compare against."""
+    frontend_dir = project_path / "frontend"
+    if any((frontend_dir / marker).exists() for marker in NEXTJS_MARKERS):
+        return "nextjs"
+    return "react-vite"
 
 
 def _upgrade_component(

@@ -15,7 +15,7 @@ from matt_stack.utils.console import print_error
 
 
 class FrontendOnlyGenerator(BaseGenerator):
-    """Generate a frontend-only project (React Vite SPA)."""
+    """Generate a frontend-only project."""
 
     @property
     def steps(self) -> list[tuple[str, Callable]]:
@@ -40,15 +40,14 @@ class FrontendOnlyGenerator(BaseGenerator):
             self.write_file("README.md", generate_readme(self.config))
             self.write_file(".gitignore", generate_gitignore(self.config))
 
-            # Vercel is always useful for frontend-only projects
-            from matt_stack.templates.deploy_vercel import generate_vercel_json
-
-            self.write_file("vercel.json", generate_vercel_json(self.config))
-
             if self.config.deployment == DeploymentTarget.FLY_IO:
                 from matt_stack.templates.deploy_fly import generate_fly_toml
 
                 self.write_file("fly.toml", generate_fly_toml(self.config))
+            elif self.config.deployment == DeploymentTarget.CLOUDFLARE:
+                from matt_stack.templates.deploy_cloudflare import generate_wrangler_toml
+
+                self.write_file("wrangler.toml", generate_wrangler_toml(self.config))
 
             return True
         except OSError as e:

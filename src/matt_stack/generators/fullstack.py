@@ -138,12 +138,16 @@ class FullstackGenerator(BaseGenerator):
                     f"{self.config.name}.service",
                     generate_systemd_service(self.config),
                 )
-            # Vercel is always useful for frontend
-            if self.config.has_frontend:
-                from matt_stack.templates.deploy_vercel import generate_vercel_json
+            elif self.config.deployment == DeploymentTarget.CLOUDFLARE:
+                from matt_stack.templates.deploy_cloudflare import generate_wrangler_toml
 
-                self.write_file("vercel.json", generate_vercel_json(self.config))
+                self.write_file("wrangler.toml", generate_wrangler_toml(self.config))
+            elif self.config.deployment == DeploymentTarget.DIGITAL_OCEAN:
+                from matt_stack.templates.deploy_digitalocean import (
+                    generate_do_app_spec,
+                )
 
+                self.write_file(".do/app.yaml", generate_do_app_spec(self.config))
             return True
         except OSError as e:
             print_error(f"Failed to create root files: {e}")

@@ -73,7 +73,7 @@
 ## Phase 9: Tier 1 — Game-Changers (completed)
 - [x] `matt-stack add` — expand existing projects in-place (add frontend/backend/ios)
 - [x] `matt-stack upgrade` — pull latest boilerplate changes into existing project
-- [x] Deployment target scaffolding (Railway, Render, Vercel configs)
+- [x] Deployment target scaffolding (Railway, Render, Cloudflare, DigitalOcean configs)
 
 ## Phase 10: Tier 2 — High-Value Polish (completed)
 - [x] Conditional template cleanup — templates 100% conditional on feature flags
@@ -89,17 +89,23 @@
 
 ---
 
-## Phase 14: New Boilerplate Support (Future)
+## Phase 14: New Boilerplate Support
 
-### Next.js (App Router)
-- [ ] Create `nextjs-app-boilerplate` repo — App Router, TypeScript, Tailwind, server actions, middleware auth
-- [ ] Add preset: `starter-nextjs-fullstack` (Next.js + Django API)
-- [ ] Add preset: `starter-nextjs` (Next.js standalone)
-- [ ] Create `parsers/nextjs_routes.py` — parse app directory route segments (`app/**/page.tsx`, `app/api/**/route.ts`)
-- [ ] Extend endpoint auditor for Next.js API routes (`app/api/*/route.ts`)
-- [ ] Add deploy support: Vercel (native), Docker (standalone output)
-- [ ] Add `FrontendFramework.NEXTJS` enum value
-- [ ] Wire into generators (new `NextjsFullstackGenerator` or extend existing)
+### Next.js (App Router) — DONE
+- [x] Create `nextjs-starter` repo (in progress externally)
+- [x] Add `FrontendFramework.NEXTJS` enum + `is_nextjs` property
+- [x] Add `nextjs` to `REPO_URLS`
+- [x] Add presets: `nextjs-fullstack` (Next.js + Django API), `nextjs-frontend` (standalone)
+- [x] Add Next.js to interactive wizard choices
+- [x] Create `parsers/nextjs_routes.py` — parse App Router routes (`page.tsx`, `route.ts`)
+- [x] Extend endpoint auditor for Next.js API routes
+- [x] Next.js-aware templates: Makefile, docker-compose, env, readme, claude_md
+- [x] Next.js monorepo post-processor (next.config.monorepo.ts, .env.local)
+- [x] Removed Vercel, added Cloudflare + DigitalOcean deploy targets
+- [x] Upgrade command detects Next.js frontend (via next.config markers)
+- [x] docker-compose.override template uses correct env var prefix
+- [x] Doctor command uses generic "Frontend dev server" label
+- [x] 45 new tests (454 total)
 
 ### C# / ASP.NET
 - [ ] Create `aspnet-boilerplate` repo — .NET 8, minimal API or controllers, EF Core, Identity
@@ -135,7 +141,7 @@
 - [ ] Create `parsers/svelte_schemas.py` — extract TS from `<script lang="ts">` blocks, Zod schemas
 - [ ] Extend auditor for SvelteKit routes (`+page.server.ts`, `+server.ts`)
 - [ ] Add `FrontendFramework.SVELTEKIT` enum value
-- [ ] Add deploy support: Vercel, Node adapter, Docker
+- [ ] Add deploy support: Cloudflare, Docker, DigitalOcean
 
 ### Vue / Nuxt
 - [ ] Create `nuxt-boilerplate` repo — Nuxt 3, TypeScript, auto-imports, composables
@@ -143,7 +149,7 @@
 - [ ] Create `parsers/vue_schemas.py` — extract TS from `<script setup lang="ts">` blocks
 - [ ] Extend auditor for Nuxt routes (`server/api/**/*.ts`)
 - [ ] Add `FrontendFramework.NUXT` enum value
-- [ ] Add deploy support: Vercel, Nitro, Docker
+- [ ] Add deploy support: Cloudflare, Docker, DigitalOcean
 
 ### Cross-cutting concerns for all new boilerplates
 - [ ] Each new boilerplate needs a generator class (inherit BaseGenerator)

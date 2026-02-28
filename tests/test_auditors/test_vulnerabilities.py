@@ -28,9 +28,7 @@ def test_no_dependency_files(tmp_path: Path) -> None:
 
 def test_empty_pyproject(tmp_path: Path) -> None:
     """No findings for pyproject.toml with no dependencies."""
-    (tmp_path / "pyproject.toml").write_text(
-        "[project]\nname = \"test\"\nversion = \"0.1.0\"\n"
-    )
+    (tmp_path / "pyproject.toml").write_text('[project]\nname = "test"\nversion = "0.1.0"\n')
     auditor = VulnerabilityAuditor(_make_config(tmp_path))
     with patch.object(auditor, "_try_pip_audit", return_value=False):
         findings = auditor.run()
@@ -50,18 +48,23 @@ def test_empty_package_json(tmp_path: Path) -> None:
 def test_pip_audit_success(tmp_path: Path) -> None:
     """pip-audit returning vulnerabilities should produce findings."""
     (tmp_path / "pyproject.toml").write_text(
-        '[project]\nname = "test"\nversion = "0.1.0"\n'
-        'dependencies = [\n  "django>=4.0",\n]\n'
+        '[project]\nname = "test"\nversion = "0.1.0"\ndependencies = [\n  "django>=4.0",\n]\n'
     )
-    pip_audit_output = json.dumps([{
-        "name": "django",
-        "version": "4.0",
-        "vulns": [{
-            "id": "PYSEC-2023-001",
-            "description": "SQL injection in Django 4.0",
-            "fix_versions": ["4.0.1"],
-        }],
-    }])
+    pip_audit_output = json.dumps(
+        [
+            {
+                "name": "django",
+                "version": "4.0",
+                "vulns": [
+                    {
+                        "id": "PYSEC-2023-001",
+                        "description": "SQL injection in Django 4.0",
+                        "fix_versions": ["4.0.1"],
+                    }
+                ],
+            }
+        ]
+    )
     mock_result = MagicMock()
     mock_result.returncode = 1  # pip-audit returns 1 when vulns found
     mock_result.stdout = pip_audit_output
@@ -79,8 +82,7 @@ def test_pip_audit_success(tmp_path: Path) -> None:
 def test_pip_audit_not_installed(tmp_path: Path) -> None:
     """Falls back to OSV when pip-audit is not installed."""
     (tmp_path / "pyproject.toml").write_text(
-        '[project]\nname = "test"\nversion = "0.1.0"\n'
-        'dependencies = [\n  "requests>=2.28.0",\n]\n'
+        '[project]\nname = "test"\nversion = "0.1.0"\ndependencies = [\n  "requests>=2.28.0",\n]\n'
     )
     with (
         patch("subprocess.run", side_effect=FileNotFoundError),
@@ -95,19 +97,25 @@ def test_pip_audit_not_installed(tmp_path: Path) -> None:
 
 def test_npm_audit_success(tmp_path: Path) -> None:
     """npm audit returning vulnerabilities should produce findings."""
-    (tmp_path / "package.json").write_text(json.dumps({
-        "name": "test",
-        "version": "1.0.0",
-        "dependencies": {"lodash": "^4.17.0"},
-    }))
-    npm_audit_output = json.dumps({
-        "vulnerabilities": {
-            "lodash": {
-                "severity": "high",
-                "via": [{"title": "Prototype Pollution"}],
+    (tmp_path / "package.json").write_text(
+        json.dumps(
+            {
+                "name": "test",
+                "version": "1.0.0",
+                "dependencies": {"lodash": "^4.17.0"},
+            }
+        )
+    )
+    npm_audit_output = json.dumps(
+        {
+            "vulnerabilities": {
+                "lodash": {
+                    "severity": "high",
+                    "via": [{"title": "Prototype Pollution"}],
+                },
             },
-        },
-    })
+        }
+    )
     mock_result = MagicMock()
     mock_result.stdout = npm_audit_output
 
@@ -131,10 +139,10 @@ def test_npm_severity_mapping() -> None:
 def test_pip_audit_timeout(tmp_path: Path) -> None:
     """pip-audit timeout should fall back gracefully."""
     (tmp_path / "pyproject.toml").write_text(
-        '[project]\nname = "test"\nversion = "0.1.0"\n'
-        'dependencies = [\n  "django>=4.0",\n]\n'
+        '[project]\nname = "test"\nversion = "0.1.0"\ndependencies = [\n  "django>=4.0",\n]\n'
     )
     import subprocess
+
     with (
         patch("subprocess.run", side_effect=subprocess.TimeoutExpired("pip-audit", 60)),
         patch.object(VulnerabilityAuditor, "_check_osv") as mock_osv,
@@ -148,10 +156,10 @@ def test_pip_audit_timeout(tmp_path: Path) -> None:
 def test_osv_network_error(tmp_path: Path) -> None:
     """OSV network error should be silently skipped."""
     (tmp_path / "pyproject.toml").write_text(
-        '[project]\nname = "test"\nversion = "0.1.0"\n'
-        'dependencies = [\n  "django>=4.0",\n]\n'
+        '[project]\nname = "test"\nversion = "0.1.0"\ndependencies = [\n  "django>=4.0",\n]\n'
     )
     from urllib.error import URLError
+
     with (
         patch("subprocess.run", side_effect=FileNotFoundError),
         patch("matt_stack.auditors.vulnerabilities.urlopen", side_effect=URLError("timeout")),
@@ -165,6 +173,7 @@ def test_osv_network_error(tmp_path: Path) -> None:
 def test_auditor_registered_in_audit_command() -> None:
     """VulnerabilityAuditor should be in AUDITOR_CLASSES."""
     from matt_stack.commands.audit import AUDITOR_CLASSES
+
     assert AuditType.VULNERABILITIES in AUDITOR_CLASSES
 
 

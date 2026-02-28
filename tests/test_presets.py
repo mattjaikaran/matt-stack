@@ -8,11 +8,13 @@ from matt_stack.presets import get_preset, list_presets
 
 def test_list_presets():
     presets = list_presets()
-    assert len(presets) == 6
+    assert len(presets) == 8
     names = [p.name for p in presets]
     assert "starter-fullstack" in names
     assert "b2b-fullstack" in names
     assert "simple-frontend" in names
+    assert "nextjs-fullstack" in names
+    assert "nextjs-frontend" in names
 
 
 def test_get_preset():

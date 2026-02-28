@@ -30,69 +30,81 @@ def generate_self_hosted_compose(config: ProjectConfig) -> str:
     if config.has_frontend:
         lines.append("      - frontend")
 
-    lines.extend([
-        "",
-        "  certbot:",
-        "    image: certbot/certbot",
-        "    entrypoint: \"/bin/sh -c 'trap exit TERM; while :; "
-        'do certbot renew; sleep 12h & wait $${!}; done;\'"',
-        "    volumes:",
-        "      - ./certbot/conf:/etc/letsencrypt",
-        "      - ./certbot/www:/var/www/certbot",
-    ])
+    lines.extend(
+        [
+            "",
+            "  certbot:",
+            "    image: certbot/certbot",
+            "    entrypoint: \"/bin/sh -c 'trap exit TERM; while :; "
+            "do certbot renew; sleep 12h & wait $${!}; done;'\"",
+            "    volumes:",
+            "      - ./certbot/conf:/etc/letsencrypt",
+            "      - ./certbot/www:/var/www/certbot",
+        ]
+    )
 
     if config.has_backend:
-        lines.extend([
-            "",
-            "  api:",
-            "    build: ./backend",
-            f'    command: gunicorn {pkg}.wsgi:application --bind 0.0.0.0:8000',
-            "    restart: unless-stopped",
-            "    env_file: .env",
-            "    expose:",
-            '      - "8000"',
-            "    depends_on:",
-            "      - db",
-        ])
+        lines.extend(
+            [
+                "",
+                "  api:",
+                "    build: ./backend",
+                f"    command: gunicorn {pkg}.wsgi:application --bind 0.0.0.0:8000",
+                "    restart: unless-stopped",
+                "    env_file: .env",
+                "    expose:",
+                '      - "8000"',
+                "    depends_on:",
+                "      - db",
+            ]
+        )
         if config.use_redis:
             lines.append("      - redis")
 
-    lines.extend([
-        "",
-        "  db:",
-        "    image: postgres:16-alpine",
-        "    restart: unless-stopped",
-        "    volumes:",
-        "      - postgres_data:/var/lib/postgresql/data",
-        "    environment:",
-        "      POSTGRES_DB: ${POSTGRES_DB:-app}",
-        "      POSTGRES_USER: ${POSTGRES_USER:-postgres}",
-        "      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}",
-    ])
+    lines.extend(
+        [
+            "",
+            "  db:",
+            "    image: postgres:16-alpine",
+            "    restart: unless-stopped",
+            "    volumes:",
+            "      - postgres_data:/var/lib/postgresql/data",
+            "    environment:",
+            "      POSTGRES_DB: ${POSTGRES_DB:-app}",
+            "      POSTGRES_USER: ${POSTGRES_USER:-postgres}",
+            "      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}",
+        ]
+    )
 
     if config.use_redis:
-        lines.extend([
-            "",
-            "  redis:",
-            "    image: redis:7-alpine",
-            "    restart: unless-stopped",
-        ])
+        lines.extend(
+            [
+                "",
+                "  redis:",
+                "    image: redis:7-alpine",
+                "    restart: unless-stopped",
+            ]
+        )
 
     if config.has_frontend:
-        lines.extend([
-            "",
-            "  frontend:",
-            "    build: ./frontend",
-            "    restart: unless-stopped",
-            "    expose:",
-            '      - "3000"',
-        ])
+        lines.extend(
+            [
+                "",
+                "  frontend:",
+                "    build: ./frontend",
+                "    restart: unless-stopped",
+                "    expose:",
+                '      - "3000"',
+            ]
+        )
 
-    lines.extend([
-        "",
-        "volumes:",
-        "  postgres_data:",
-    ])
+    lines.extend(
+        [
+            "",
+            "volumes:",
+            "  postgres_data:",
+        ]
+    )
 
     return "\n".join(lines) + "\n"
 
@@ -124,45 +136,51 @@ def generate_nginx_conf(config: ProjectConfig) -> str:
     ]
 
     if config.has_backend and config.has_frontend:
-        lines.extend([
-            "    location /api/ {",
-            "        proxy_pass http://api:8000;",
-            "        proxy_set_header Host $host;",
-            "        proxy_set_header X-Real-IP $remote_addr;",
-            "        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;",
-            "        proxy_set_header X-Forwarded-Proto $scheme;",
-            "    }",
-            "",
-            "    location /admin/ {",
-            "        proxy_pass http://api:8000;",
-            "        proxy_set_header Host $host;",
-            "        proxy_set_header X-Real-IP $remote_addr;",
-            "    }",
-            "",
-            "    location / {",
-            "        proxy_pass http://frontend:3000;",
-            "        proxy_set_header Host $host;",
-            "        proxy_set_header X-Real-IP $remote_addr;",
-            "    }",
-        ])
+        lines.extend(
+            [
+                "    location /api/ {",
+                "        proxy_pass http://api:8000;",
+                "        proxy_set_header Host $host;",
+                "        proxy_set_header X-Real-IP $remote_addr;",
+                "        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;",
+                "        proxy_set_header X-Forwarded-Proto $scheme;",
+                "    }",
+                "",
+                "    location /admin/ {",
+                "        proxy_pass http://api:8000;",
+                "        proxy_set_header Host $host;",
+                "        proxy_set_header X-Real-IP $remote_addr;",
+                "    }",
+                "",
+                "    location / {",
+                "        proxy_pass http://frontend:3000;",
+                "        proxy_set_header Host $host;",
+                "        proxy_set_header X-Real-IP $remote_addr;",
+                "    }",
+            ]
+        )
     elif config.has_backend:
-        lines.extend([
-            "    location / {",
-            "        proxy_pass http://api:8000;",
-            "        proxy_set_header Host $host;",
-            "        proxy_set_header X-Real-IP $remote_addr;",
-            "        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;",
-            "        proxy_set_header X-Forwarded-Proto $scheme;",
-            "    }",
-        ])
+        lines.extend(
+            [
+                "    location / {",
+                "        proxy_pass http://api:8000;",
+                "        proxy_set_header Host $host;",
+                "        proxy_set_header X-Real-IP $remote_addr;",
+                "        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;",
+                "        proxy_set_header X-Forwarded-Proto $scheme;",
+                "    }",
+            ]
+        )
     elif config.has_frontend:
-        lines.extend([
-            "    location / {",
-            "        proxy_pass http://frontend:3000;",
-            "        proxy_set_header Host $host;",
-            "        proxy_set_header X-Real-IP $remote_addr;",
-            "    }",
-        ])
+        lines.extend(
+            [
+                "    location / {",
+                "        proxy_pass http://frontend:3000;",
+                "        proxy_set_header Host $host;",
+                "        proxy_set_header X-Real-IP $remote_addr;",
+                "    }",
+            ]
+        )
 
     lines.append("}")
     return "\n".join(lines) + "\n"

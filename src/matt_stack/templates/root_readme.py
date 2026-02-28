@@ -42,9 +42,12 @@ def _tech_stack(config: ProjectConfig) -> str:
         if config.use_celery:
             stack.append("- **Background Tasks**: Celery")
     if config.has_frontend:
-        is_tanstack = config.frontend_framework.value == "react-vite"
-        fw = "TanStack Router" if is_tanstack else "React Router"
-        stack.append(f"- **Frontend**: React + Vite + TypeScript ({fw})")
+        if config.is_nextjs:
+            stack.append("- **Frontend**: Next.js (App Router, TypeScript, Tailwind)")
+        else:
+            is_tanstack = config.frontend_framework.value == "react-vite"
+            fw = "TanStack Router" if is_tanstack else "React Router"
+            stack.append(f"- **Frontend**: React + Vite + TypeScript ({fw})")
     if config.include_ios:
         stack.append("- **iOS**: SwiftUI (iOS 17+)")
 
@@ -91,13 +94,14 @@ def _quickstart(config: ProjectConfig) -> str:
 
 def _project_structure_fullstack(config: ProjectConfig) -> str:
     ios_line = "\n├── ios/                  # iOS client (SwiftUI)" if config.include_ios else ""
+    fe_label = "Next.js App" if config.is_nextjs else "React SPA"
     return f"""\
 ## Project Structure
 
 ```
 {config.name}/
 ├── backend/              # Django API
-├── frontend/             # React SPA{ios_line}
+├── frontend/             # {fe_label}{ios_line}
 ├── docker-compose.yml    # Dev services
 ├── docker-compose.prod.yml
 ├── Makefile              # All commands
@@ -121,12 +125,13 @@ def _project_structure_backend(config: ProjectConfig) -> str:
 
 
 def _project_structure_frontend(config: ProjectConfig) -> str:
+    label = "Next.js App" if config.is_nextjs else "React SPA"
     return f"""\
 ## Project Structure
 
 ```
 {config.name}/
-├── frontend/             # React SPA
+├── frontend/             # {label}
 ├── Makefile
 └── .env.example
 ```"""

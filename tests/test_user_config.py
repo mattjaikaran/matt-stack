@@ -76,9 +76,7 @@ def test_get_user_presets(tmp_path: Path) -> None:
 
 def test_get_user_defaults(tmp_path: Path) -> None:
     config_file = tmp_path / "config.yaml"
-    config_file.write_text(
-        "defaults:\n  deployment: railway\n  use_celery: false\n"
-    )
+    config_file.write_text("defaults:\n  deployment: railway\n  use_celery: false\n")
     with patch("matt_stack.user_config.USER_CONFIG_PATH", config_file):
         defaults = get_user_defaults()
         assert defaults["deployment"] == "railway"
@@ -109,9 +107,7 @@ def test_template_config_is_valid_yaml() -> None:
 
 def test_get_repo_urls_merges_user_config(tmp_path: Path) -> None:
     config_file = tmp_path / "config.yaml"
-    config_file.write_text(
-        "repos:\n  custom-repo: https://example.com/custom.git\n"
-    )
+    config_file.write_text("repos:\n  custom-repo: https://example.com/custom.git\n")
     with patch("matt_stack.user_config.USER_CONFIG_PATH", config_file):
         from matt_stack.config import get_repo_urls
 
@@ -141,10 +137,7 @@ def test_get_all_presets_merges_user_presets(tmp_path: Path) -> None:
 def test_user_preset_invalid_values_skipped(tmp_path: Path) -> None:
     config_file = tmp_path / "config.yaml"
     config_file.write_text(
-        "presets:\n"
-        "  bad-preset:\n"
-        "    description: Bad preset\n"
-        "    project_type: nonexistent\n"
+        "presets:\n  bad-preset:\n    description: Bad preset\n    project_type: nonexistent\n"
     )
     with patch("matt_stack.user_config.USER_CONFIG_PATH", config_file):
         from matt_stack.presets import get_all_presets

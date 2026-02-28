@@ -9,6 +9,11 @@ from pathlib import Path
 
 from matt_stack.auditors.base import AuditFinding, AuditType, BaseAuditor, Severity
 from matt_stack.parsers.django_routes import Route, find_route_files, parse_routes_file
+from matt_stack.parsers.nextjs_routes import (
+    NextjsRoute,
+    find_nextjs_app_dirs,
+    parse_nextjs_routes,
+)
 
 
 class EndpointAuditor(BaseAuditor):
@@ -17,21 +22,27 @@ class EndpointAuditor(BaseAuditor):
     def run(self) -> list[AuditFinding]:
         project = self.config.project_path
         routes = self._parse_all_routes(project)
+        nextjs_routes = self._parse_nextjs_routes(project)
 
-        if not routes:
+        if not routes and not nextjs_routes:
             self.add_finding(
                 Severity.INFO,
                 Path("."),
                 0,
                 "No route definitions found",
-                "Routes are expected in api.py, routes.py, controllers.py, etc.",
+                "Routes are expected in api.py, routes.py, controllers.py, "
+                "or Next.js app/api/ directory.",
             )
             return self.findings
 
-        self._check_duplicates(routes)
-        self._check_stubs(routes)
-        self._check_auth(routes)
-        self._check_naming(routes)
+        if routes:
+            self._check_duplicates(routes)
+            self._check_stubs(routes)
+            self._check_auth(routes)
+            self._check_naming(routes)
+
+        if nextjs_routes:
+            self._check_nextjs_api_routes(nextjs_routes)
 
         if self.config.live:
             self._live_probe(routes)
@@ -43,6 +54,51 @@ class EndpointAuditor(BaseAuditor):
         for f in find_route_files(project):
             routes.extend(parse_routes_file(f))
         return routes
+
+    def _parse_nextjs_routes(self, project: Path) -> list[NextjsRoute]:
+        routes: list[NextjsRoute] = []
+        for app_dir in find_nextjs_app_dirs(project):
+            routes.extend(parse_nextjs_routes(app_dir))
+        return routes
+
+    def _check_nextjs_api_routes(self, routes: list[NextjsRoute]) -> None:
+        """Audit Next.js API routes for stubs and missing auth."""
+        api_routes = [r for r in routes if r.route_type == "api"]
+        write_methods = {"POST", "PUT", "DELETE", "PATCH"}
+
+        for r in api_routes:
+            if r.is_stub:
+                self.add_finding(
+                    Severity.WARNING,
+                    self._rel(r.file),
+                    1,
+                    f"Stub API route: {', '.join(r.methods)} {r.path}",
+                    "Implement the route handler",
+                )
+
+            has_write = any(m in write_methods for m in r.methods)
+            if has_write and not r.has_auth:
+                self.add_finding(
+                    Severity.WARNING,
+                    self._rel(r.file),
+                    1,
+                    f"No auth on write API route: {', '.join(r.methods)} {r.path}",
+                    "Add authentication check (getServerSession, middleware, etc.)",
+                )
+
+        # Check for duplicate API paths
+        path_counter: Counter[str] = Counter()
+        for r in api_routes:
+            path_counter[r.path] += 1
+        for path, count in path_counter.items():
+            if count > 1:
+                self.add_finding(
+                    Severity.ERROR,
+                    Path("."),
+                    0,
+                    f"Duplicate Next.js API route: {path} defined {count} times",
+                    "Remove duplicate route.ts files",
+                )
 
     def _check_duplicates(self, routes: list[Route]) -> None:
         """Find duplicate method+path combinations."""

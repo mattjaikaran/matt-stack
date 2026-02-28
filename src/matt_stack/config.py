@@ -22,6 +22,7 @@ class Variant(str, Enum):
 class FrontendFramework(str, Enum):
     REACT_VITE = "react-vite"
     REACT_VITE_STARTER = "react-vite-starter"
+    NEXTJS = "nextjs"
 
 
 class DeploymentTarget(str, Enum):
@@ -29,6 +30,8 @@ class DeploymentTarget(str, Enum):
     RAILWAY = "railway"
     RENDER = "render"
     FLY_IO = "fly-io"
+    CLOUDFLARE = "cloudflare"
+    DIGITAL_OCEAN = "digital-ocean"
     AWS = "aws"
     GCP = "gcp"
     HETZNER = "hetzner"
@@ -39,6 +42,7 @@ REPO_URLS: dict[str, str] = {
     "django-ninja": "https://github.com/mattjaikaran/django-ninja-boilerplate.git",
     "react-vite": "https://github.com/mattjaikaran/react-vite-boilerplate.git",
     "react-vite-starter": "https://github.com/mattjaikaran/react-vite-starter.git",
+    "nextjs": "https://github.com/mattjaikaran/nextjs-starter.git",
     "swift-ios": "https://github.com/mattjaikaran/swift-ios-starter.git",
 }
 
@@ -135,6 +139,10 @@ class ProjectConfig:
     @property
     def ios_dir(self) -> Path:
         return self.path / "ios"
+
+    @property
+    def is_nextjs(self) -> bool:
+        return self.frontend_framework == FrontendFramework.NEXTJS
 
     @property
     def backend_repo_key(self) -> str:

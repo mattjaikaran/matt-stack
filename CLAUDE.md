@@ -37,10 +37,10 @@ matt-stack info                  # Show presets and repos
 src/matt_stack/
 ├── cli.py              # Typer app — 8 commands: init, add, upgrade, audit (--html), doctor, info, presets, version
 ├── config.py           # ProjectType, Variant, FrontendFramework, DeploymentTarget enums
-│                       # ProjectConfig dataclass (13 fields, 8 computed properties)
+│                       # ProjectConfig dataclass (13 fields, 9 computed properties incl. is_nextjs)
 │                       # REPO_URLS dict, normalize_name(), to_python_package()
-├── presets.py          # 6 presets: starter-fullstack, b2b-fullstack, starter-api, b2b-api,
-│                       #            starter-frontend, simple-frontend
+├── presets.py          # 8 presets: starter-fullstack, b2b-fullstack, starter-api, b2b-api,
+│                       #            starter-frontend, simple-frontend, nextjs-fullstack, nextjs-frontend
 │
 ├── commands/
 │   ├── init.py         # run_init() — 3 modes: config-file → preset → interactive wizard
@@ -75,6 +75,7 @@ src/matt_stack/
 │   ├── typescript_types.py  # TSInterface/TSField, parse_typescript_file(), find_typescript_type_files()
 │   ├── zod_schemas.py       # ZodSchema/ZodField, parse_zod_file(), find_zod_files()
 │   ├── django_routes.py     # Route, parse_routes_file(), find_route_files()
+│   ├── nextjs_routes.py     # NextjsRoute, parse_nextjs_routes(), find_nextjs_app_dirs()
 │   ├── test_files.py        # TestCase/TestSuite, parse_pytest_file(), parse_vitest_file()
 │   └── dependencies.py      # Dependency/DependencyManifest, parse_pyproject_toml(), parse_package_json()
 │
@@ -82,7 +83,7 @@ src/matt_stack/
 ├── templates/          # f-string functions (all conditional on feature flags):
 │                       # makefile, docker_compose, env, readme, gitignore, claude_md
 │                       # pre_commit_config, docker_compose_override
-│                       # deploy_railway, deploy_render, deploy_vercel
+│                       # deploy_railway, deploy_render, deploy_cloudflare, deploy_digitalocean
 └── utils/              # console (Rich helpers), git, docker, process, yaml_config
 ```
 
@@ -90,7 +91,7 @@ src/matt_stack/
 
 1. **Templates = Python functions** returning f-strings (not Jinja2). All in `templates/`.
 2. **Generators inherit BaseGenerator (ABC)**. Each defines a `steps` property; base class runs them.
-3. **ProjectConfig** is the single config object passed everywhere. Computed properties: `has_backend`, `has_frontend`, `is_fullstack`, `is_b2b`, `backend_dir`, `frontend_dir`.
+3. **ProjectConfig** is the single config object passed everywhere. Computed properties: `has_backend`, `has_frontend`, `is_fullstack`, `is_b2b`, `is_nextjs`, `backend_dir`, `frontend_dir`.
 4. **Parsers are pure functions** — regex-based, no AST, no new dependencies. Each returns dataclasses.
 5. **Auditors inherit BaseAuditor**. Each has `run() → list[AuditFinding]`, uses `self.add_finding()`.
 6. **Plugins** — custom auditors in `matt-stack-plugins/` are auto-discovered via `importlib.util`.
@@ -123,7 +124,7 @@ src/matt_stack/
 
 ```bash
 uv sync                        # Install
-uv run pytest -x -q            # Tests (364 tests)
+uv run pytest -x -q            # Tests (505 tests)
 uv run ruff check src/ tests/  # Lint
 uv run ruff format src/ tests/ # Format
 uv run matt-stack init test --preset starter-fullstack -o /tmp  # E2E test

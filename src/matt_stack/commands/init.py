@@ -134,7 +134,7 @@ def _run_interactive(
         choices=[
             questionary.Choice("Fullstack Monorepo (Backend + Frontend)", value="fullstack"),
             questionary.Choice("Backend Only (Django API)", value="backend-only"),
-            questionary.Choice("Frontend Only (React Vite SPA)", value="frontend-only"),
+            questionary.Choice("Frontend Only", value="frontend-only"),
         ],
         style=STYLE,
     ).ask()
@@ -165,6 +165,7 @@ def _run_interactive(
                 questionary.Choice(
                     "React Vite + React Router (simpler)", value="react-vite-starter"
                 ),
+                questionary.Choice("Next.js (App Router, TypeScript, Tailwind)", value="nextjs"),
             ],
             style=STYLE,
         ).ask()
@@ -299,5 +300,6 @@ def _print_next_steps(config: ProjectConfig) -> None:
     elif config.has_backend:
         console.print("  [cyan]make backend-dev[/cyan]  # http://localhost:8000")
     elif config.has_frontend:
-        console.print("  [cyan]make frontend-dev[/cyan] # http://localhost:3000")
+        port = "3000"
+        console.print(f"  [cyan]make frontend-dev[/cyan] # http://localhost:{port}")
     console.print()

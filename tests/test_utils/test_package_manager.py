@@ -1,0 +1,178 @@
+"""Tests for package manager detection and command building."""
+
+from __future__ import annotations
+
+from pathlib import Path
+from unittest.mock import patch
+
+from matt_stack.utils.package_manager import (
+    DEFAULT_PM,
+    PackageManager,
+    build_add_cmd,
+    build_exec_cmd,
+    build_install_cmd,
+    build_remove_cmd,
+    build_run_cmd,
+    detect_package_manager,
+    resolve_package_manager,
+)
+
+
+class TestDetectPackageManager:
+    def test_detect_bun_lockb(self, tmp_path: Path) -> None:
+        (tmp_path / "package.json").write_text("{}")
+        (tmp_path / "bun.lockb").write_text("")
+        assert detect_package_manager(tmp_path) == PackageManager.BUN
+
+    def test_detect_bun_lock(self, tmp_path: Path) -> None:
+        (tmp_path / "package.json").write_text("{}")
+        (tmp_path / "bun.lock").write_text("")
+        assert detect_package_manager(tmp_path) == PackageManager.BUN
+
+    def test_detect_npm(self, tmp_path: Path) -> None:
+        (tmp_path / "package.json").write_text("{}")
+        (tmp_path / "package-lock.json").write_text("{}")
+        assert detect_package_manager(tmp_path) == PackageManager.NPM
+
+    def test_detect_yarn(self, tmp_path: Path) -> None:
+        (tmp_path / "package.json").write_text("{}")
+        (tmp_path / "yarn.lock").write_text("")
+        assert detect_package_manager(tmp_path) == PackageManager.YARN
+
+    def test_detect_pnpm(self, tmp_path: Path) -> None:
+        (tmp_path / "package.json").write_text("{}")
+        (tmp_path / "pnpm-lock.yaml").write_text("")
+        assert detect_package_manager(tmp_path) == PackageManager.PNPM
+
+    def test_default_to_bun(self, tmp_path: Path) -> None:
+        (tmp_path / "package.json").write_text("{}")
+        assert detect_package_manager(tmp_path) == DEFAULT_PM
+
+    def test_detect_from_frontend_subdir(self, tmp_path: Path) -> None:
+        frontend = tmp_path / "frontend"
+        frontend.mkdir()
+        (frontend / "package.json").write_text("{}")
+        (frontend / "yarn.lock").write_text("")
+        assert detect_package_manager(tmp_path) == PackageManager.YARN
+
+    def test_frontend_subdir_takes_priority(self, tmp_path: Path) -> None:
+        (tmp_path / "package-lock.json").write_text("{}")
+        frontend = tmp_path / "frontend"
+        frontend.mkdir()
+        (frontend / "package.json").write_text("{}")
+        (frontend / "bun.lockb").write_text("")
+        assert detect_package_manager(tmp_path) == PackageManager.BUN
+
+
+class TestResolvePackageManager:
+    def test_explicit_override(self, tmp_path: Path) -> None:
+        assert resolve_package_manager(tmp_path, override="npm") == PackageManager.NPM
+
+    def test_invalid_override_falls_through(self, tmp_path: Path) -> None:
+        result = resolve_package_manager(tmp_path, override="invalid")
+        assert result == DEFAULT_PM
+
+    @patch("matt_stack.user_config.load_user_config")
+    def test_user_config_override(self, mock_config, tmp_path: Path) -> None:
+        mock_config.return_value = {"defaults": {"package_manager": "yarn"}}
+        assert resolve_package_manager(tmp_path) == PackageManager.YARN
+
+    def test_lockfile_detection_over_default(self, tmp_path: Path) -> None:
+        (tmp_path / "pnpm-lock.yaml").write_text("")
+        assert resolve_package_manager(tmp_path) == PackageManager.PNPM
+
+
+class TestBuildAddCmd:
+    def test_bun_add(self) -> None:
+        cmd = build_add_cmd(PackageManager.BUN, ["react", "react-dom"])
+        assert cmd.full == ["bun", "add", "react", "react-dom"]
+
+    def test_bun_add_dev(self) -> None:
+        cmd = build_add_cmd(PackageManager.BUN, ["vitest"], dev=True)
+        assert cmd.full == ["bun", "add", "-d", "vitest"]
+
+    def test_npm_install(self) -> None:
+        cmd = build_add_cmd(PackageManager.NPM, ["axios"])
+        assert cmd.full == ["npm", "install", "axios"]
+
+    def test_npm_install_dev(self) -> None:
+        cmd = build_add_cmd(PackageManager.NPM, ["jest"], dev=True)
+        assert "--save-dev" in cmd.full
+
+    def test_yarn_add(self) -> None:
+        cmd = build_add_cmd(PackageManager.YARN, ["lodash"])
+        assert cmd.full == ["yarn", "add", "lodash"]
+
+    def test_yarn_add_dev(self) -> None:
+        cmd = build_add_cmd(PackageManager.YARN, ["eslint"], dev=True)
+        assert "--dev" in cmd.full
+
+    def test_pnpm_add(self) -> None:
+        cmd = build_add_cmd(PackageManager.PNPM, ["zod"])
+        assert cmd.full == ["pnpm", "add", "zod"]
+
+    def test_pnpm_add_dev(self) -> None:
+        cmd = build_add_cmd(PackageManager.PNPM, ["typescript"], dev=True)
+        assert "-D" in cmd.full
+
+
+class TestBuildRemoveCmd:
+    def test_bun_remove(self) -> None:
+        cmd = build_remove_cmd(PackageManager.BUN, ["axios"])
+        assert cmd.full == ["bun", "remove", "axios"]
+
+    def test_npm_uninstall(self) -> None:
+        cmd = build_remove_cmd(PackageManager.NPM, ["axios"])
+        assert cmd.full == ["npm", "uninstall", "axios"]
+
+    def test_yarn_remove(self) -> None:
+        cmd = build_remove_cmd(PackageManager.YARN, ["axios"])
+        assert cmd.full == ["yarn", "remove", "axios"]
+
+
+class TestBuildInstallCmd:
+    def test_bun_install(self) -> None:
+        cmd = build_install_cmd(PackageManager.BUN)
+        assert cmd.full == ["bun", "install"]
+
+    def test_npm_install(self) -> None:
+        cmd = build_install_cmd(PackageManager.NPM)
+        assert cmd.full == ["npm", "install"]
+
+
+class TestBuildRunCmd:
+    def test_run_script(self) -> None:
+        cmd = build_run_cmd(PackageManager.BUN, "dev")
+        assert cmd.full == ["bun", "run", "dev"]
+
+    def test_run_script_with_args(self) -> None:
+        cmd = build_run_cmd(PackageManager.NPM, "test", ["--watch"])
+        assert cmd.full == ["npm", "run", "test", "--watch"]
+
+
+class TestBuildExecCmd:
+    def test_bunx(self) -> None:
+        cmd = build_exec_cmd(PackageManager.BUN, "create-next-app")
+        assert cmd.full == ["bunx", "create-next-app"]
+
+    def test_npx(self) -> None:
+        cmd = build_exec_cmd(PackageManager.NPM, "create-next-app")
+        assert cmd.full == ["npx", "create-next-app"]
+
+    def test_yarn_dlx(self) -> None:
+        cmd = build_exec_cmd(PackageManager.YARN, "create-next-app")
+        assert cmd.full == ["yarn", "dlx", "create-next-app"]
+
+    def test_pnpm_dlx(self) -> None:
+        cmd = build_exec_cmd(PackageManager.PNPM, "create-next-app")
+        assert cmd.full == ["pnpm", "dlx", "create-next-app"]
+
+    def test_exec_with_extra_args(self) -> None:
+        cmd = build_exec_cmd(PackageManager.BUN, "tsc", ["--noEmit"])
+        assert cmd.full == ["bunx", "tsc", "--noEmit"]
+
+
+class TestPMCommandStr:
+    def test_str_representation(self) -> None:
+        cmd = build_add_cmd(PackageManager.BUN, ["react"])
+        assert str(cmd) == "bun add react"

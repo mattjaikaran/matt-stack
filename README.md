@@ -69,7 +69,7 @@ matt-stack init my-app --preset b2b-fullstack -o ~/projects
 | Flag | Description |
 |------|-------------|
 | `--path, -p` | Project path (default: current directory) |
-| `--framework, -f` | Frontend framework: `react-vite`, `react-vite-starter` |
+| `--framework, -f` | Frontend framework: `react-vite`, `react-vite-starter`, `nextjs` |
 | `--dry-run` | Preview what would be added |
 
 ### `upgrade` Options
@@ -126,6 +126,8 @@ matt-stack audit -t quality --fix
 | `b2b-api` | backend-only | B2B backend with orgs, teams, RBAC |
 | `starter-frontend` | frontend-only | React Vite (TanStack Router) |
 | `simple-frontend` | frontend-only | React Vite (React Router, simpler) |
+| `nextjs-fullstack` | fullstack | Django Ninja + Next.js (App Router) |
+| `nextjs-frontend` | frontend-only | Next.js standalone (App Router, Tailwind) |
 
 ## Audit Domains
 
@@ -276,7 +278,7 @@ src/matt_stack/
 ├── templates/           # f-string template functions (all conditional on feature flags)
 │                        # makefile, docker_compose, env, readme, gitignore, claude_md
 │                        # pre_commit_config, docker_compose_override
-│                        # deploy_railway, deploy_render, deploy_vercel
+│                        # deploy_railway, deploy_render, deploy_cloudflare, deploy_digitalocean
 └── utils/               # console, git, docker, process, yaml_config
 ```
 
