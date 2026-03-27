@@ -168,6 +168,90 @@ def test_zod_matching_by_name_variants(tmp_path: Path) -> None:
     assert len(zod_missing) == 0
 
 
+def test_alias_field_matching_ts(tmp_path: Path) -> None:
+    """Pydantic field with alias='firstName' should match TS firstName — no missing warning."""
+    schemas_dir = tmp_path / "backend" / "schemas"
+    schemas_dir.mkdir(parents=True)
+    (schemas_dir / "schemas.py").write_text(
+        "from pydantic import BaseModel, Field\n\n"
+        "class Contact(BaseModel):\n"
+        '    first_name: str = Field(alias="firstName")\n'
+    )
+    types_dir = tmp_path / "frontend" / "types"
+    types_dir.mkdir(parents=True)
+    (types_dir / "types.ts").write_text("export interface Contact {\n  firstName: string;\n}\n")
+    auditor = TypeSafetyAuditor(_make_config(tmp_path))
+    findings = auditor.run()
+    missing = [f for f in findings if "missing field" in f.message]
+    assert len(missing) == 0
+
+
+def test_serialization_alias_field_matching_ts(tmp_path: Path) -> None:
+    """serialization_alias should be used for TS matching (it's the API output name)."""
+    schemas_dir = tmp_path / "backend" / "schemas"
+    schemas_dir.mkdir(parents=True)
+    (schemas_dir / "schemas.py").write_text(
+        "from pydantic import BaseModel, Field\n\n"
+        "class User(BaseModel):\n"
+        '    user_id: int = Field(serialization_alias="userId")\n'
+    )
+    types_dir = tmp_path / "frontend" / "types"
+    types_dir.mkdir(parents=True)
+    (types_dir / "types.ts").write_text("export interface User {\n  userId: number;\n}\n")
+    auditor = TypeSafetyAuditor(_make_config(tmp_path))
+    findings = auditor.run()
+    missing = [f for f in findings if "missing field" in f.message]
+    assert len(missing) == 0
+
+
+def test_alias_generator_to_camel_ts(tmp_path: Path) -> None:
+    """alias_generator=to_camel should auto-resolve snake_case to camelCase."""
+    schemas_dir = tmp_path / "backend" / "schemas"
+    schemas_dir.mkdir(parents=True)
+    (schemas_dir / "schemas.py").write_text(
+        "from pydantic import BaseModel, ConfigDict\n"
+        "from pydantic.alias_generators import to_camel\n\n"
+        "class Contact(BaseModel):\n"
+        "    model_config = ConfigDict(alias_generator=to_camel)\n\n"
+        "    first_name: str\n"
+        "    last_name: str\n"
+    )
+    types_dir = tmp_path / "frontend" / "types"
+    types_dir.mkdir(parents=True)
+    (types_dir / "types.ts").write_text(
+        "export interface Contact {\n  firstName: string;\n  lastName: string;\n}\n"
+    )
+    auditor = TypeSafetyAuditor(_make_config(tmp_path))
+    findings = auditor.run()
+    missing = [f for f in findings if "missing field" in f.message]
+    assert len(missing) == 0
+
+
+def test_alias_zod_matching(tmp_path: Path) -> None:
+    """Pydantic alias should be used when matching Zod schema fields."""
+    schemas_dir = tmp_path / "backend" / "schemas"
+    schemas_dir.mkdir(parents=True)
+    (schemas_dir / "schemas.py").write_text(
+        "from pydantic import BaseModel, Field\n\n"
+        "class UserSchema(BaseModel):\n"
+        '    first_name: str = Field(alias="firstName")\n'
+    )
+    zod_dir = tmp_path / "frontend" / "schemas"
+    zod_dir.mkdir(parents=True)
+    (zod_dir / "schemas.ts").write_text(
+        "import { z } from 'zod';\n"
+        "export const userSchema = z.object({\n"
+        "  firstName: z.string(),\n"
+        "});\n"
+    )
+    auditor = TypeSafetyAuditor(_make_config(tmp_path))
+    findings = auditor.run()
+    zod_missing = [
+        f for f in findings if "Zod schema" in f.message and "missing field" in f.message
+    ]
+    assert len(zod_missing) == 0
+
+
 def test_type_compatibility_structure() -> None:
     """TYPE_COMPATIBILITY should have python-typescript pair with expected types."""
     from matt_stack.auditors.types import TYPE_COMPATIBILITY

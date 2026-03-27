@@ -7,7 +7,12 @@ from collections.abc import Callable
 from pathlib import Path
 
 from matt_stack.auditors.base import AuditFinding, AuditType, BaseAuditor, Severity
-from matt_stack.parsers.python_schemas import PydanticSchema, find_schema_files, parse_pydantic_file
+from matt_stack.parsers.python_schemas import (
+    PydanticField,
+    PydanticSchema,
+    find_schema_files,
+    parse_pydantic_file,
+)
 from matt_stack.parsers.typescript_types import (
     TSInterface,
     find_typescript_type_files,
@@ -130,21 +135,42 @@ class TypeSafetyAuditor(BaseAuditor):
 
             self._compare_fields_ts(schema, ts)
 
+    def _resolve_api_name(self, pf: PydanticField, schema: PydanticSchema) -> str:
+        """Resolve the serialized field name, considering field aliases and alias_generator."""
+        # Field-level alias takes priority
+        if pf.serialization_alias or pf.alias:
+            return pf.api_name
+
+        # Model-level alias_generator
+        if schema.alias_generator:
+            gen = schema.alias_generator
+            if gen in ("to_camel", "to_lower_camel"):
+                return snake_to_camel(pf.name)
+            if gen in ("to_pascal",):
+                return snake_to_pascal(pf.name)
+            # Unknown generator — fall back to camelCase guess
+            return snake_to_camel(pf.name)
+
+        # No alias config — try both snake and camel
+        return snake_to_camel(pf.name)
+
     def _compare_fields_ts(self, py: PydanticSchema, ts: TSInterface) -> None:
         ts_fields = {f.name: f for f in ts.fields}
 
         for pf in py.fields:
-            # Try exact name or camelCase
-            camel = snake_to_camel(pf.name)
-            tf = ts_fields.get(pf.name) or ts_fields.get(camel)
+            # Use alias-aware name resolution
+            expected_name = self._resolve_api_name(pf, py)
+            tf = ts_fields.get(pf.name) or ts_fields.get(expected_name)
 
             if not tf:
                 self.add_finding(
                     Severity.WARNING,
                     self._rel(ts.file),
                     ts.line,
-                    f"TS interface '{ts.name}' missing field '{camel}' (from Python '{pf.name}')",
-                    f"Add '{camel}: {self._py_to_frontend_type(pf.type_str)}' to {ts.name}",
+                    f"TS interface '{ts.name}' missing field '{expected_name}' "
+                    f"(from Python '{pf.name}')",
+                    f"Add '{expected_name}: {self._py_to_frontend_type(pf.type_str)}' "
+                    f"to {ts.name}",
                 )
                 continue
 
@@ -207,16 +233,18 @@ class TypeSafetyAuditor(BaseAuditor):
         zod_fields = {f.name: f for f in zod.fields}
 
         for pf in py.fields:
-            camel = snake_to_camel(pf.name)
-            zf = zod_fields.get(pf.name) or zod_fields.get(camel)
+            expected_name = self._resolve_api_name(pf, py)
+            zf = zod_fields.get(pf.name) or zod_fields.get(expected_name)
 
             if not zf:
                 self.add_finding(
                     Severity.WARNING,
                     self._rel(zod.file),
                     zod.line,
-                    f"Zod schema '{zod.name}' missing field '{camel}' (from Python '{pf.name}')",
-                    f"Add '{camel}: z.{self._py_to_frontend_type(pf.type_str)}()' to {zod.name}",
+                    f"Zod schema '{zod.name}' missing field '{expected_name}' "
+                    f"(from Python '{pf.name}')",
+                    f"Add '{expected_name}: z.{self._py_to_frontend_type(pf.type_str)}()' "
+                    f"to {zod.name}",
                 )
                 continue
 

@@ -88,3 +88,110 @@ def test_parse_empty_file(tmp_path: Path) -> None:
     f.write_text("# no schemas here\n")
     schemas = parse_pydantic_file(f)
     assert schemas == []
+
+
+def test_parse_field_alias(tmp_path: Path) -> None:
+    f = tmp_path / "schemas.py"
+    f.write_text("""\
+from pydantic import BaseModel, Field
+
+class UserSchema(BaseModel):
+    first_name: str = Field(alias="firstName")
+    last_name: str = Field(alias="lastName")
+    email: str
+""")
+    schemas = parse_pydantic_file(f)
+    fields = {field.name: field for field in schemas[0].fields}
+    assert fields["first_name"].alias == "firstName"
+    assert fields["first_name"].api_name == "firstName"
+    assert fields["last_name"].alias == "lastName"
+    assert fields["email"].alias is None
+    assert fields["email"].api_name == "email"
+
+
+def test_parse_serialization_alias(tmp_path: Path) -> None:
+    f = tmp_path / "schemas.py"
+    f.write_text("""\
+from pydantic import BaseModel, Field
+
+class UserSchema(BaseModel):
+    user_id: int = Field(serialization_alias="userId")
+    display_name: str = Field(validation_alias="displayName")
+""")
+    schemas = parse_pydantic_file(f)
+    fields = {field.name: field for field in schemas[0].fields}
+    assert fields["user_id"].serialization_alias == "userId"
+    assert fields["user_id"].api_name == "userId"
+    assert fields["display_name"].validation_alias == "displayName"
+    assert fields["display_name"].input_name == "displayName"
+    # api_name falls back to field name when no serialization alias
+    assert fields["display_name"].api_name == "display_name"
+
+
+def test_parse_alias_with_constraints(tmp_path: Path) -> None:
+    f = tmp_path / "schemas.py"
+    f.write_text("""\
+from pydantic import BaseModel, Field
+
+class RegisterSchema(BaseModel):
+    user_name: str = Field(alias="userName", min_length=3, max_length=50)
+""")
+    schemas = parse_pydantic_file(f)
+    fields = {field.name: field for field in schemas[0].fields}
+    assert fields["user_name"].alias == "userName"
+    assert fields["user_name"].constraints["min_length"] == "3"
+    assert fields["user_name"].constraints["max_length"] == "50"
+    # alias should NOT be in constraints
+    assert "alias" not in fields["user_name"].constraints
+
+
+def test_parse_alias_generator(tmp_path: Path) -> None:
+    f = tmp_path / "schemas.py"
+    f.write_text("""\
+from pydantic import BaseModel, ConfigDict
+from pydantic.alias_generators import to_camel
+
+class UserSchema(BaseModel):
+    model_config = ConfigDict(alias_generator=to_camel)
+
+    first_name: str
+    last_name: str
+""")
+    schemas = parse_pydantic_file(f)
+    assert schemas[0].alias_generator == "to_camel"
+
+
+def test_field_api_name_priority(tmp_path: Path) -> None:
+    """serialization_alias > alias > name."""
+    f = tmp_path / "schemas.py"
+    f.write_text("""\
+from pydantic import BaseModel, Field
+
+class TestSchema(BaseModel):
+    field_a: str = Field(alias="a", serialization_alias="out_a")
+    field_b: str = Field(alias="b")
+    field_c: str
+""")
+    schemas = parse_pydantic_file(f)
+    fields = {field.name: field for field in schemas[0].fields}
+    assert fields["field_a"].api_name == "out_a"
+    assert fields["field_b"].api_name == "b"
+    assert fields["field_c"].api_name == "field_c"
+
+
+def test_field_input_name_priority(tmp_path: Path) -> None:
+    """validation_alias > alias > name."""
+    f = tmp_path / "schemas.py"
+    f.write_text("""\
+from pydantic import BaseModel, Field
+
+class TestSchema(BaseModel):
+    field_a: str = Field(alias="a", validation_alias="in_a")
+    field_b: str = Field(alias="b")
+    field_c: str
+""")
+    schemas = parse_pydantic_file(f)
+    fields = {field.name: field for field in schemas[0].fields}
+    assert fields["field_a"].input_name == "in_a"
+    assert fields["field_b"].input_name == "b"
+    assert fields["field_c"].input_name == "field_c"

@@ -14,6 +14,25 @@ class PydanticField:
     optional: bool = False
     default: str | None = None
     constraints: dict[str, str] = field(default_factory=dict)
+    alias: str | None = None
+    serialization_alias: str | None = None
+    validation_alias: str | None = None
+
+    @property
+    def api_name(self) -> str:
+        """The field name as it appears in API responses (serialization).
+
+        Priority: serialization_alias > alias > name.
+        """
+        return self.serialization_alias or self.alias or self.name
+
+    @property
+    def input_name(self) -> str:
+        """The field name expected in API requests (validation).
+
+        Priority: validation_alias > alias > name.
+        """
+        return self.validation_alias or self.alias or self.name
 
 
 @dataclass
@@ -23,6 +42,7 @@ class PydanticSchema:
     line: int
     fields: list[PydanticField] = field(default_factory=list)
     parent: str | None = None
+    alias_generator: str | None = None  # e.g. "to_camel", "to_pascal"
 
 
 # Pattern: class Name(Schema): or class Name(BaseModel):
@@ -35,6 +55,17 @@ FIELD_RE = re.compile(r"^\s{2,8}(\w+)\s*:\s*(.+?)(?:\s*=\s*(.+))?\s*$", re.MULTI
 
 # Pattern: Field(min_length=X, max_length=Y, ...) constraints
 CONSTRAINT_RE = re.compile(r"(\w+)\s*=\s*([^,\)]+)")
+
+# Pattern: alias="foo" or alias='foo' in Field(...)
+ALIAS_RE = re.compile(r"""\balias\s*=\s*["']([^"']+)["']""")
+SERIALIZATION_ALIAS_RE = re.compile(r"""\bserialization_alias\s*=\s*["']([^"']+)["']""")
+VALIDATION_ALIAS_RE = re.compile(r"""\bvalidation_alias\s*=\s*["']([^"']+)["']""")
+
+# Pattern: alias_generator = to_camel or alias_generator=to_camel
+ALIAS_GENERATOR_RE = re.compile(r"\balias_generator\s*=\s*(\w+)")
+
+# Pattern: model_config = ConfigDict(...) on a single line (common case)
+MODEL_CONFIG_RE = re.compile(r"^\s+model_config\s*=\s*ConfigDict\((.+?)\)", re.MULTILINE)
 
 # Type patterns for optionality
 OPTIONAL_RE = re.compile(r"Optional\[(.+)\]|(\w+)\s*\|\s*None|None\s*\|\s*(\w+)")
@@ -60,6 +91,7 @@ def parse_pydantic_file(path: Path) -> list[PydanticSchema]:
                 break
 
         body_text = "\n".join(body_lines)
+        alias_gen = _detect_alias_generator(body_text)
         fields = _parse_fields(body_text)
 
         schemas.append(
@@ -69,6 +101,7 @@ def parse_pydantic_file(path: Path) -> list[PydanticSchema]:
                 line=class_start,
                 fields=fields,
                 parent=parent,
+                alias_generator=alias_gen,
             )
         )
 
@@ -90,13 +123,28 @@ def _parse_fields(body: str) -> list[PydanticField]:
 
         optional = bool(OPTIONAL_RE.search(type_str))
 
-        # Parse constraints from Field(...)
+        # Parse constraints and aliases from Field(...)
         constraints: dict[str, str] = {}
+        alias: str | None = None
+        serialization_alias: str | None = None
+        validation_alias: str | None = None
         if default_val and "Field(" in default_val:
             for cm in CONSTRAINT_RE.finditer(default_val):
                 key, val = cm.group(1).strip(), cm.group(2).strip()
-                if key not in ("default", "default_factory"):
+                if key not in ("default", "default_factory",
+                               "alias", "serialization_alias", "validation_alias"):
                     constraints[key] = val
+
+            # Extract aliases
+            am = ALIAS_RE.search(default_val)
+            if am:
+                alias = am.group(1)
+            sam = SERIALIZATION_ALIAS_RE.search(default_val)
+            if sam:
+                serialization_alias = sam.group(1)
+            vam = VALIDATION_ALIAS_RE.search(default_val)
+            if vam:
+                validation_alias = vam.group(1)
 
         fields.append(
             PydanticField(
@@ -105,10 +153,28 @@ def _parse_fields(body: str) -> list[PydanticField]:
                 optional=optional,
                 default=default_val.strip() if default_val else None,
                 constraints=constraints,
+                alias=alias,
+                serialization_alias=serialization_alias,
+                validation_alias=validation_alias,
             )
         )
 
     return fields
+
+
+def _detect_alias_generator(body: str) -> str | None:
+    """Detect alias_generator in model_config = ConfigDict(...)."""
+    m = MODEL_CONFIG_RE.search(body)
+    if m:
+        config_body = m.group(1)
+        gm = ALIAS_GENERATOR_RE.search(config_body)
+        if gm:
+            return gm.group(1)
+    # Also check bare alias_generator = ... (class-level attribute)
+    gm = ALIAS_GENERATOR_RE.search(body)
+    if gm:
+        return gm.group(1)
+    return None
 
 
 def _normalize_type(t: str) -> str:
