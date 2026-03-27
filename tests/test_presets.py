@@ -2,8 +2,8 @@
 
 from pathlib import Path
 
-from matt_stack.config import FrontendFramework, ProjectType, Variant
-from matt_stack.presets import get_preset, list_presets
+from mattstack.config import FrontendFramework, ProjectType, Variant
+from mattstack.presets import get_preset, list_presets
 
 
 def test_list_presets():

@@ -6,8 +6,8 @@ import urllib.error
 from pathlib import Path
 from unittest.mock import patch
 
-from matt_stack.auditors.base import AuditConfig, Severity
-from matt_stack.auditors.endpoints import EndpointAuditor
+from mattstack.auditors.base import AuditConfig, Severity
+from mattstack.auditors.endpoints import EndpointAuditor
 
 
 def _make_config(path: Path, **kwargs) -> AuditConfig:

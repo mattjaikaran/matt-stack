@@ -6,8 +6,8 @@ import json
 from collections.abc import Callable
 from pathlib import Path
 
-from matt_stack.config import ProjectConfig, ProjectType
-from matt_stack.generators.base import BaseGenerator
+from mattstack.config import ProjectConfig, ProjectType
+from mattstack.generators.base import BaseGenerator
 
 
 class _ConcreteGenerator(BaseGenerator):

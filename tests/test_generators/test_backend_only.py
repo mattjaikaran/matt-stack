@@ -5,8 +5,8 @@ from __future__ import annotations
 from pathlib import Path
 from unittest.mock import patch
 
-from matt_stack.config import ProjectConfig, ProjectType, Variant
-from matt_stack.generators.backend_only import BackendOnlyGenerator
+from mattstack.config import ProjectConfig, ProjectType, Variant
+from mattstack.generators.backend_only import BackendOnlyGenerator
 
 
 def _make_config(tmp_path: Path, **kwargs) -> ProjectConfig:
@@ -28,7 +28,7 @@ def _mock_clone(url: str, dest: Path, branch: str = "main", depth: int = 1) -> b
     return True
 
 
-@patch("matt_stack.generators.base.clone_repo", side_effect=_mock_clone)
+@patch("mattstack.generators.base.clone_repo", side_effect=_mock_clone)
 def test_backend_generates_files(mock_clone, tmp_path: Path) -> None:
     config = _make_config(tmp_path)
     gen = BackendOnlyGenerator(config)
@@ -40,7 +40,7 @@ def test_backend_generates_files(mock_clone, tmp_path: Path) -> None:
     assert (config.path / "README.md").exists()
 
 
-@patch("matt_stack.generators.base.clone_repo", return_value=False)
+@patch("mattstack.generators.base.clone_repo", return_value=False)
 def test_backend_clone_failure(mock_clone, tmp_path: Path) -> None:
     config = _make_config(tmp_path)
     gen = BackendOnlyGenerator(config)
@@ -49,7 +49,7 @@ def test_backend_clone_failure(mock_clone, tmp_path: Path) -> None:
     assert not config.path.exists()
 
 
-@patch("matt_stack.generators.base.clone_repo", side_effect=_mock_clone)
+@patch("mattstack.generators.base.clone_repo", side_effect=_mock_clone)
 def test_backend_b2b(mock_clone, tmp_path: Path) -> None:
     config = _make_config(tmp_path, variant=Variant.B2B)
     gen = BackendOnlyGenerator(config)
@@ -57,8 +57,8 @@ def test_backend_b2b(mock_clone, tmp_path: Path) -> None:
     assert result is True
 
 
-@patch("matt_stack.generators.backend_only.customize_backend")
-@patch("matt_stack.generators.base.clone_repo", side_effect=_mock_clone)
+@patch("mattstack.generators.backend_only.customize_backend")
+@patch("mattstack.generators.base.clone_repo", side_effect=_mock_clone)
 def test_backend_dry_run(mock_clone, mock_be, tmp_path: Path) -> None:
     config = _make_config(tmp_path, dry_run=True)
     gen = BackendOnlyGenerator(config)

@@ -1,4 +1,4 @@
-"""Tests for matt-stack env command."""
+"""Tests for mattstack env command."""
 
 from __future__ import annotations
 
@@ -7,7 +7,7 @@ from pathlib import Path
 import pytest
 import typer
 
-from matt_stack.commands.env import (
+from mattstack.commands.env import (
     _find_env_pairs,
     _mask_value,
     _parse_env_file,
@@ -165,7 +165,7 @@ class TestEnvCliIntegration:
     def test_env_check_via_cli(self, tmp_path: Path) -> None:
         from typer.testing import CliRunner
 
-        from matt_stack.cli import app
+        from mattstack.cli import app
 
         (tmp_path / ".env.example").write_text("FOO=bar\n")
         (tmp_path / ".env").write_text("FOO=bar\n")

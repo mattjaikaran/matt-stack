@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from matt_stack.parsers.zod_schemas import parse_zod_file
+from mattstack.parsers.zod_schemas import parse_zod_file
 
 
 def test_simple_schema(tmp_path: Path) -> None:

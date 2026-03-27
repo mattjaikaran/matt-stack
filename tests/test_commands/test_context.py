@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 import typer
 
-from matt_stack.commands.context import (
+from mattstack.commands.context import (
     _detect_components,
     _detect_env_vars,
     _detect_frontend_stack,

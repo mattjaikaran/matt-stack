@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from matt_stack.parsers.utils import SKIP_DIRS, extract_block, find_files
+from mattstack.parsers.utils import SKIP_DIRS, extract_block, find_files
 
 
 def test_skip_dirs_is_frozenset() -> None:

@@ -5,10 +5,10 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from matt_stack.config import ProjectConfig, ProjectType, Variant
-from matt_stack.post_processors.b2b import print_b2b_instructions
-from matt_stack.post_processors.customizer import customize_backend, customize_frontend
-from matt_stack.post_processors.frontend_config import setup_frontend_monorepo
+from mattstack.config import ProjectConfig, ProjectType, Variant
+from mattstack.post_processors.b2b import print_b2b_instructions
+from mattstack.post_processors.customizer import customize_backend, customize_frontend
+from mattstack.post_processors.frontend_config import setup_frontend_monorepo
 
 
 def _make_config(tmp_path: Path, **kwargs) -> ProjectConfig:

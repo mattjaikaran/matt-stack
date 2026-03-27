@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from matt_stack.auditors.base import AuditFinding, AuditReport, AuditType, Severity
-from matt_stack.auditors.report import AUDIT_END, AUDIT_START, write_todo
+from mattstack.auditors.base import AuditFinding, AuditReport, AuditType, Severity
+from mattstack.auditors.report import AUDIT_END, AUDIT_START, write_todo
 
 
 def _make_report(findings: list[AuditFinding]) -> AuditReport:

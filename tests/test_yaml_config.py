@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from matt_stack.utils.yaml_config import load_config_file
+from mattstack.utils.yaml_config import load_config_file
 
 
 def test_valid_config(tmp_path: Path) -> None:

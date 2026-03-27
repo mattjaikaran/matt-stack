@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from matt_stack.parsers.test_files import parse_pytest_file, parse_vitest_file
+from mattstack.parsers.test_files import parse_pytest_file, parse_vitest_file
 
 
 def test_pytest_functions(tmp_path: Path) -> None:

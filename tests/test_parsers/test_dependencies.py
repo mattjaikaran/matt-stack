@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from matt_stack.parsers.dependencies import (
+from mattstack.parsers.dependencies import (
     find_dependency_files,
     parse_package_json,
     parse_pyproject_toml,

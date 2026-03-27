@@ -5,7 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 from unittest.mock import patch
 
-from matt_stack.config import FrontendFramework, ProjectConfig, ProjectType, Variant
+from mattstack.config import FrontendFramework, ProjectConfig, ProjectType, Variant
 
 
 def _nextjs_config(tmp_path: Path, **kwargs) -> ProjectConfig:
@@ -59,7 +59,7 @@ class TestNextjsConfig:
         assert config.frontend_repo_key == "nextjs"
 
     def test_repo_url_exists(self) -> None:
-        from matt_stack.config import REPO_URLS
+        from mattstack.config import REPO_URLS
 
         assert "nextjs" in REPO_URLS
         assert "nextjs-starter" in REPO_URLS["nextjs"]
@@ -70,7 +70,7 @@ class TestNextjsConfig:
 
 class TestNextjsPresets:
     def test_nextjs_fullstack_preset(self) -> None:
-        from matt_stack.presets import get_preset
+        from mattstack.presets import get_preset
 
         preset = get_preset("nextjs-fullstack")
         assert preset is not None
@@ -78,7 +78,7 @@ class TestNextjsPresets:
         assert preset.frontend_framework == FrontendFramework.NEXTJS
 
     def test_nextjs_frontend_preset(self) -> None:
-        from matt_stack.presets import get_preset
+        from mattstack.presets import get_preset
 
         preset = get_preset("nextjs-frontend")
         assert preset is not None
@@ -87,7 +87,7 @@ class TestNextjsPresets:
         assert preset.use_celery is False
 
     def test_nextjs_preset_to_config(self, tmp_path: Path) -> None:
-        from matt_stack.presets import get_preset
+        from mattstack.presets import get_preset
 
         preset = get_preset("nextjs-fullstack")
         config = preset.to_config("my-next-app", tmp_path / "my-next-app")
@@ -101,7 +101,7 @@ class TestNextjsPresets:
 
 class TestNextjsMakefile:
     def test_makefile_fullstack(self, tmp_path: Path) -> None:
-        from matt_stack.templates.root_makefile import generate_makefile
+        from mattstack.templates.root_makefile import generate_makefile
 
         config = _nextjs_config(tmp_path)
         mk = generate_makefile(config)
@@ -110,7 +110,7 @@ class TestNextjsMakefile:
         assert "bun run dev" in mk
 
     def test_makefile_frontend_only(self, tmp_path: Path) -> None:
-        from matt_stack.templates.root_makefile import generate_makefile
+        from mattstack.templates.root_makefile import generate_makefile
 
         config = _nextjs_frontend_config(tmp_path)
         mk = generate_makefile(config)
@@ -120,7 +120,7 @@ class TestNextjsMakefile:
 
 class TestNextjsDockerCompose:
     def test_docker_compose_nextjs(self, tmp_path: Path) -> None:
-        from matt_stack.templates.docker_compose import generate_docker_compose
+        from mattstack.templates.docker_compose import generate_docker_compose
 
         config = _nextjs_config(tmp_path)
         dc = generate_docker_compose(config)
@@ -130,7 +130,7 @@ class TestNextjsDockerCompose:
         assert "VITE_" not in dc
 
     def test_docker_compose_vite_unchanged(self, tmp_path: Path) -> None:
-        from matt_stack.templates.docker_compose import generate_docker_compose
+        from mattstack.templates.docker_compose import generate_docker_compose
 
         config = ProjectConfig(
             name="test",
@@ -143,7 +143,7 @@ class TestNextjsDockerCompose:
 
 class TestNextjsEnv:
     def test_env_nextjs(self, tmp_path: Path) -> None:
-        from matt_stack.templates.root_env import generate_env_example
+        from mattstack.templates.root_env import generate_env_example
 
         config = _nextjs_config(tmp_path)
         env = generate_env_example(config)
@@ -151,7 +151,7 @@ class TestNextjsEnv:
         assert "VITE_" not in env
 
     def test_env_vite_unchanged(self, tmp_path: Path) -> None:
-        from matt_stack.templates.root_env import generate_env_example
+        from mattstack.templates.root_env import generate_env_example
 
         config = ProjectConfig(
             name="test",
@@ -164,7 +164,7 @@ class TestNextjsEnv:
 
 class TestNextjsReadme:
     def test_readme_nextjs(self, tmp_path: Path) -> None:
-        from matt_stack.templates.root_readme import generate_readme
+        from mattstack.templates.root_readme import generate_readme
 
         config = _nextjs_config(tmp_path)
         readme = generate_readme(config)
@@ -172,7 +172,7 @@ class TestNextjsReadme:
         assert "App Router" in readme
 
     def test_readme_frontend_only(self, tmp_path: Path) -> None:
-        from matt_stack.templates.root_readme import generate_readme
+        from mattstack.templates.root_readme import generate_readme
 
         config = _nextjs_frontend_config(tmp_path)
         readme = generate_readme(config)
@@ -181,7 +181,7 @@ class TestNextjsReadme:
 
 class TestNextjsClaudeMd:
     def test_claude_md_nextjs(self, tmp_path: Path) -> None:
-        from matt_stack.templates.root_claude_md import generate_claude_md
+        from mattstack.templates.root_claude_md import generate_claude_md
 
         config = _nextjs_config(tmp_path)
         md = generate_claude_md(config)
@@ -190,7 +190,7 @@ class TestNextjsClaudeMd:
         assert "NEXT_PUBLIC_API_BASE_URL" in md
 
     def test_claude_md_nextjs_dev_server(self, tmp_path: Path) -> None:
-        from matt_stack.templates.root_claude_md import generate_claude_md
+        from mattstack.templates.root_claude_md import generate_claude_md
 
         config = _nextjs_config(tmp_path)
         md = generate_claude_md(config)
@@ -202,7 +202,7 @@ class TestNextjsClaudeMd:
 
 class TestNextjsFrontendConfig:
     def test_vite_monorepo_setup(self, tmp_path: Path) -> None:
-        from matt_stack.post_processors.frontend_config import setup_frontend_monorepo
+        from mattstack.post_processors.frontend_config import setup_frontend_monorepo
 
         config = ProjectConfig(
             name="test",
@@ -217,7 +217,7 @@ class TestNextjsFrontendConfig:
         assert "VITE_MODE" in env
 
     def test_nextjs_monorepo_setup(self, tmp_path: Path) -> None:
-        from matt_stack.post_processors.frontend_config import setup_frontend_monorepo
+        from mattstack.post_processors.frontend_config import setup_frontend_monorepo
 
         config = _nextjs_config(tmp_path)
         config.frontend_dir.mkdir(parents=True)
@@ -228,7 +228,7 @@ class TestNextjsFrontendConfig:
         assert "NEXT_PUBLIC_API_BASE_URL" in env
 
     def test_nextjs_monorepo_config_content(self, tmp_path: Path) -> None:
-        from matt_stack.post_processors.frontend_config import setup_frontend_monorepo
+        from mattstack.post_processors.frontend_config import setup_frontend_monorepo
 
         config = _nextjs_config(tmp_path)
         config.frontend_dir.mkdir(parents=True)
@@ -238,7 +238,7 @@ class TestNextjsFrontendConfig:
         assert "localhost:8000" in content
 
     def test_no_monorepo_for_frontend_only(self, tmp_path: Path) -> None:
-        from matt_stack.post_processors.frontend_config import setup_frontend_monorepo
+        from mattstack.post_processors.frontend_config import setup_frontend_monorepo
 
         config = _nextjs_frontend_config(tmp_path)
         config.frontend_dir.mkdir(parents=True)
@@ -265,10 +265,10 @@ class TestNextjsGenerator:
             (dest / "src").mkdir()
         return True
 
-    @patch("matt_stack.generators.base.clone_repo")
+    @patch("mattstack.generators.base.clone_repo")
     def test_fullstack_nextjs(self, mock_clone, tmp_path: Path) -> None:
         mock_clone.side_effect = self._mock_clone
-        from matt_stack.generators.fullstack import FullstackGenerator
+        from mattstack.generators.fullstack import FullstackGenerator
 
         config = _nextjs_config(tmp_path)
         gen = FullstackGenerator(config)
@@ -282,10 +282,10 @@ class TestNextjsGenerator:
         assert any("nextjs" in url for url in clone_urls)
         assert not any("react-vite" in url for url in clone_urls)
 
-    @patch("matt_stack.generators.base.clone_repo")
+    @patch("mattstack.generators.base.clone_repo")
     def test_frontend_only_nextjs(self, mock_clone, tmp_path: Path) -> None:
         mock_clone.side_effect = self._mock_clone
-        from matt_stack.generators.frontend_only import FrontendOnlyGenerator
+        from mattstack.generators.frontend_only import FrontendOnlyGenerator
 
         config = _nextjs_frontend_config(tmp_path)
         gen = FrontendOnlyGenerator(config)

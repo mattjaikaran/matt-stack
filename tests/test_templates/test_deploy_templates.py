@@ -7,17 +7,17 @@ from pathlib import Path
 
 import pytest
 
-from matt_stack.config import (
+from mattstack.config import (
     DeploymentTarget,
     FrontendFramework,
     ProjectConfig,
     ProjectType,
     Variant,
 )
-from matt_stack.templates.deploy_cloudflare import generate_wrangler_toml
-from matt_stack.templates.deploy_digitalocean import generate_do_app_spec
-from matt_stack.templates.deploy_railway import generate_railway_json, generate_railway_toml
-from matt_stack.templates.deploy_render import generate_render_yaml
+from mattstack.templates.deploy_cloudflare import generate_wrangler_toml
+from mattstack.templates.deploy_digitalocean import generate_do_app_spec
+from mattstack.templates.deploy_railway import generate_railway_json, generate_railway_toml
+from mattstack.templates.deploy_render import generate_render_yaml
 
 # --- Fixtures for deployment-specific configs ---
 

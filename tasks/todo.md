@@ -1,4 +1,4 @@
-# matt-stack TODO
+# mattstack TODO
 
 ## Phase 1: Foundation
 
@@ -80,8 +80,8 @@
 
 ## Phase 9: Tier 1 — Game-Changers (completed)
 
-- `matt-stack add` — expand existing projects in-place (add frontend/backend/ios)
-- `matt-stack upgrade` — pull latest boilerplate changes into existing project
+- `mattstack add` — expand existing projects in-place (add frontend/backend/ios)
+- `mattstack upgrade` — pull latest boilerplate changes into existing project
 - Deployment target scaffolding (Railway, Render, Cloudflare, DigitalOcean configs)
 
 ## Phase 10: Tier 2 — High-Value Polish (completed)
@@ -93,7 +93,7 @@
 ## Phase 11: Tier 3 — Differentiators (completed)
 
 - Audit HTML dashboard export (`--html` flag, browsable report, inline CSS/JS)
-- Plugin system for custom auditors (load from ./matt-stack-plugins/)
+- Plugin system for custom auditors (load from ./mattstack-plugins/)
 - docker-compose.override.yml template for per-developer customization
 - iOS generator customization (rename MyApp references)
 - YAML config mode E2E test (8 tests covering all config paths)
@@ -101,7 +101,7 @@
 ## Phase 12: Client Command & Agent DX (completed)
 
 - `utils/package_manager.py` — detect PM from lockfiles, abstract bun/npm/yarn/pnpm
-- `commands/client.py` — `matt-stack client add/remove/install/run/dev/build/exec/which`
+- `commands/client.py` — `mattstack client add/remove/install/run/dev/build/exec/which`
 - `commands/context.py` — dump project context as markdown/JSON for AI agents
 - Wire `client` subcommand group + `context` command into `cli.py`
 - `user_config.py` — support `package_manager` preference (bun/npm/yarn/pnpm)
@@ -109,10 +109,10 @@
 
 ## Phase 13: Tooling & DX Enhancements (completed)
 
-- `commands/dev.py` — unified `matt-stack dev` (docker + backend + frontend)
-- `commands/test.py` — unified `matt-stack test` (pytest + vitest, parallel mode)
-- `commands/lint.py` — unified `matt-stack lint` (ruff + eslint, --fix, --format-check)
-- `commands/env.py` — `matt-stack env check/sync/show` (.env management)
+- `commands/dev.py` — unified `mattstack dev` (docker + backend + frontend)
+- `commands/test.py` — unified `mattstack test` (pytest + vitest, parallel mode)
+- `commands/lint.py` — unified `mattstack lint` (ruff + eslint, --fix, --format-check)
+- `commands/env.py` — `mattstack env check/sync/show` (.env management)
 - `commands/version.py` — version display + PyPI update check
 - `commands/completions.py` — shell completion installer (bash/zsh/fish)
 - README.md — document all new commands, client, context, --quiet, --html, vulnerabilities

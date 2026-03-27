@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from matt_stack.auditors.base import AuditConfig
-from matt_stack.auditors.tests import CoverageAuditor
+from mattstack.auditors.base import AuditConfig
+from mattstack.auditors.tests import CoverageAuditor
 
 
 def _make_config(path: Path) -> AuditConfig:

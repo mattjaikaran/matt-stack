@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from matt_stack.parsers.typescript_types import parse_typescript_file
+from mattstack.parsers.typescript_types import parse_typescript_file
 
 
 def test_parse_basic_interface(tmp_path: Path) -> None:

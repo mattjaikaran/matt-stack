@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typer.testing import CliRunner
 
-from matt_stack.cli import app
+from mattstack.cli import app
 
 runner = CliRunner()
 
@@ -12,7 +12,7 @@ runner = CliRunner()
 def test_version_command() -> None:
     result = runner.invoke(app, ["version"])
     assert result.exit_code == 0
-    assert "matt-stack" in result.output
+    assert "mattstack" in result.output
 
 
 def test_info_command() -> None:
@@ -56,13 +56,13 @@ def test_no_args_shows_help() -> None:
     result = runner.invoke(app, [])
     # no_args_is_help=True causes exit code 0 or 2 depending on Typer version
     assert result.exit_code in (0, 2)
-    assert "Usage" in result.output or "matt-stack" in result.output
+    assert "Usage" in result.output or "mattstack" in result.output
 
 
 def test_verbose_flag() -> None:
     result = runner.invoke(app, ["-v", "version"])
     assert result.exit_code == 0
-    assert "matt-stack" in result.output
+    assert "mattstack" in result.output
 
 
 def test_presets_command_hidden_but_works() -> None:

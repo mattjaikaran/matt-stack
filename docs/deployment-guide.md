@@ -1,9 +1,9 @@
-# matt-stack Deployment Guide
+# mattstack Deployment Guide
 
-matt-stack generates deployment configs for multiple platforms. Specify the target during init:
+mattstack generates deployment configs for multiple platforms. Specify the target during init:
 
 ```bash
-matt-stack init my-app --preset starter-fullstack  # default: docker
+mattstack init my-app --preset starter-fullstack  # default: docker
 ```
 
 Or in a YAML config file:

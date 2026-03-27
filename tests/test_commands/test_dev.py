@@ -1,4 +1,4 @@
-"""Tests for matt-stack dev command."""
+"""Tests for mattstack dev command."""
 
 from __future__ import annotations
 
@@ -10,7 +10,7 @@ from unittest.mock import patch
 import pytest
 import typer
 
-from matt_stack.commands.dev import (
+from mattstack.commands.dev import (
     _has_backend,
     _has_docker,
     _has_frontend,
@@ -112,9 +112,9 @@ class TestRunDev:
         """With docker-compose.yml, should try docker (mocked to succeed)."""
         (tmp_path / "docker-compose.yml").write_text("version: '3'\n")
         with (
-            patch("matt_stack.commands.dev.docker_compose_available", return_value=True),
-            patch("matt_stack.commands.dev.docker_running", return_value=True),
-            patch("matt_stack.commands.dev.subprocess.run") as mock_run,
+            patch("mattstack.commands.dev.docker_compose_available", return_value=True),
+            patch("mattstack.commands.dev.docker_running", return_value=True),
+            patch("mattstack.commands.dev.subprocess.run") as mock_run,
         ):
             mock_run.return_value = subprocess.CompletedProcess(args=[], returncode=0)
             run_dev(tmp_path)

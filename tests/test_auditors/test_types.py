@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from matt_stack.auditors.base import AuditConfig
-from matt_stack.auditors.types import TypeSafetyAuditor
+from mattstack.auditors.base import AuditConfig
+from mattstack.auditors.types import TypeSafetyAuditor
 
 
 def _make_config(path: Path) -> AuditConfig:
@@ -254,7 +254,7 @@ def test_alias_zod_matching(tmp_path: Path) -> None:
 
 def test_type_compatibility_structure() -> None:
     """TYPE_COMPATIBILITY should have python-typescript pair with expected types."""
-    from matt_stack.auditors.types import TYPE_COMPATIBILITY
+    from mattstack.auditors.types import TYPE_COMPATIBILITY
 
     py_ts = TYPE_COMPATIBILITY[("python", "typescript")]
     assert py_ts["str"] == {"string"}
@@ -266,7 +266,7 @@ def test_type_compatibility_structure() -> None:
 
 def test_type_map_backward_compat() -> None:
     """TYPE_MAP should still work as alias for python-typescript pair."""
-    from matt_stack.auditors.types import TYPE_COMPATIBILITY, TYPE_MAP
+    from mattstack.auditors.types import TYPE_COMPATIBILITY, TYPE_MAP
 
     assert TYPE_MAP is TYPE_COMPATIBILITY[("python", "typescript")]
     assert TYPE_MAP["str"] == {"string"}
@@ -274,7 +274,7 @@ def test_type_map_backward_compat() -> None:
 
 def test_snake_to_pascal() -> None:
     """snake_to_pascal should convert to PascalCase."""
-    from matt_stack.auditors.types import snake_to_pascal
+    from mattstack.auditors.types import snake_to_pascal
 
     assert snake_to_pascal("first_name") == "FirstName"
     assert snake_to_pascal("user_id") == "UserId"
@@ -283,7 +283,7 @@ def test_snake_to_pascal() -> None:
 
 def test_name_converters() -> None:
     """NAME_CONVERTERS should have python-typescript and python-csharp pairs."""
-    from matt_stack.auditors.types import NAME_CONVERTERS
+    from mattstack.auditors.types import NAME_CONVERTERS
 
     assert ("python", "typescript") in NAME_CONVERTERS
     assert ("python", "csharp") in NAME_CONVERTERS

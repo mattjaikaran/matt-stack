@@ -6,8 +6,8 @@ import json
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
-from matt_stack.auditors.base import AuditConfig, AuditType, Severity
-from matt_stack.auditors.vulnerabilities import VulnerabilityAuditor
+from mattstack.auditors.base import AuditConfig, AuditType, Severity
+from mattstack.auditors.vulnerabilities import VulnerabilityAuditor
 
 
 def _make_config(path: Path) -> AuditConfig:
@@ -162,7 +162,7 @@ def test_osv_network_error(tmp_path: Path) -> None:
 
     with (
         patch("subprocess.run", side_effect=FileNotFoundError),
-        patch("matt_stack.auditors.vulnerabilities.urlopen", side_effect=URLError("timeout")),
+        patch("mattstack.auditors.vulnerabilities.urlopen", side_effect=URLError("timeout")),
     ):
         auditor = VulnerabilityAuditor(_make_config(tmp_path))
         findings = auditor.run()
@@ -172,7 +172,7 @@ def test_osv_network_error(tmp_path: Path) -> None:
 
 def test_auditor_registered_in_audit_command() -> None:
     """VulnerabilityAuditor should be in AUDITOR_CLASSES."""
-    from matt_stack.commands.audit import AUDITOR_CLASSES
+    from mattstack.commands.audit import AUDITOR_CLASSES
 
     assert AuditType.VULNERABILITIES in AUDITOR_CLASSES
 

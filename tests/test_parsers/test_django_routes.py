@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from matt_stack.parsers.django_routes import parse_routes_file
+from mattstack.parsers.django_routes import parse_routes_file
 
 
 def test_basic_routes(tmp_path: Path) -> None:

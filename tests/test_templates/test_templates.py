@@ -1,15 +1,15 @@
 """Tests for template generation."""
 
-from matt_stack.config import ProjectConfig
-from matt_stack.templates.docker_compose import generate_docker_compose
-from matt_stack.templates.docker_compose_override import generate_docker_compose_override
-from matt_stack.templates.docker_compose_prod import generate_docker_compose_prod
-from matt_stack.templates.pre_commit_config import generate_pre_commit_config
-from matt_stack.templates.root_claude_md import generate_claude_md
-from matt_stack.templates.root_env import generate_env_example
-from matt_stack.templates.root_gitignore import generate_gitignore
-from matt_stack.templates.root_makefile import generate_makefile
-from matt_stack.templates.root_readme import generate_readme
+from mattstack.config import ProjectConfig
+from mattstack.templates.docker_compose import generate_docker_compose
+from mattstack.templates.docker_compose_override import generate_docker_compose_override
+from mattstack.templates.docker_compose_prod import generate_docker_compose_prod
+from mattstack.templates.pre_commit_config import generate_pre_commit_config
+from mattstack.templates.root_claude_md import generate_claude_md
+from mattstack.templates.root_env import generate_env_example
+from mattstack.templates.root_gitignore import generate_gitignore
+from mattstack.templates.root_makefile import generate_makefile
+from mattstack.templates.root_readme import generate_readme
 
 
 def test_makefile_fullstack(starter_fullstack_config: ProjectConfig):

@@ -4,13 +4,13 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from matt_stack.auditors.base import AuditConfig, BaseAuditor
-from matt_stack.auditors.plugins import discover_plugins
+from mattstack.auditors.base import AuditConfig, BaseAuditor
+from mattstack.auditors.plugins import discover_plugins
 
 VALID_PLUGIN = '''\
 """A custom auditor plugin."""
 from pathlib import Path
-from matt_stack.auditors.base import AuditType, BaseAuditor, Severity, AuditFinding
+from mattstack.auditors.base import AuditType, BaseAuditor, Severity, AuditFinding
 
 
 class CustomAuditor(BaseAuditor):
@@ -47,12 +47,12 @@ class TestDiscoverPlugins:
         assert result == []
 
     def test_returns_empty_when_plugin_dir_empty(self, tmp_path: Path) -> None:
-        (tmp_path / "matt-stack-plugins").mkdir()
+        (tmp_path / "mattstack-plugins").mkdir()
         result = discover_plugins(tmp_path)
         assert result == []
 
     def test_loads_valid_plugin(self, tmp_path: Path) -> None:
-        plugin_dir = tmp_path / "matt-stack-plugins"
+        plugin_dir = tmp_path / "mattstack-plugins"
         plugin_dir.mkdir()
         (plugin_dir / "custom_auditor.py").write_text(VALID_PLUGIN)
 
@@ -62,7 +62,7 @@ class TestDiscoverPlugins:
         assert issubclass(result[0], BaseAuditor)
 
     def test_plugin_can_run(self, tmp_path: Path) -> None:
-        plugin_dir = tmp_path / "matt-stack-plugins"
+        plugin_dir = tmp_path / "mattstack-plugins"
         plugin_dir.mkdir()
         (plugin_dir / "custom_auditor.py").write_text(VALID_PLUGIN)
 
@@ -76,7 +76,7 @@ class TestDiscoverPlugins:
         assert findings[0].message == "Plugin finding"
 
     def test_skips_underscore_files(self, tmp_path: Path) -> None:
-        plugin_dir = tmp_path / "matt-stack-plugins"
+        plugin_dir = tmp_path / "mattstack-plugins"
         plugin_dir.mkdir()
         (plugin_dir / "_private.py").write_text(VALID_PLUGIN)
         (plugin_dir / "__init__.py").write_text("")
@@ -85,7 +85,7 @@ class TestDiscoverPlugins:
         assert result == []
 
     def test_handles_import_errors_gracefully(self, tmp_path: Path) -> None:
-        plugin_dir = tmp_path / "matt-stack-plugins"
+        plugin_dir = tmp_path / "mattstack-plugins"
         plugin_dir.mkdir()
         (plugin_dir / "broken.py").write_text(BROKEN_PLUGIN)
 
@@ -94,7 +94,7 @@ class TestDiscoverPlugins:
         assert result == []
 
     def test_skips_files_without_auditor_class(self, tmp_path: Path) -> None:
-        plugin_dir = tmp_path / "matt-stack-plugins"
+        plugin_dir = tmp_path / "mattstack-plugins"
         plugin_dir.mkdir()
         (plugin_dir / "no_auditor.py").write_text(NO_AUDITOR_PLUGIN)
 
@@ -102,12 +102,12 @@ class TestDiscoverPlugins:
         assert result == []
 
     def test_loads_multiple_plugins(self, tmp_path: Path) -> None:
-        plugin_dir = tmp_path / "matt-stack-plugins"
+        plugin_dir = tmp_path / "mattstack-plugins"
         plugin_dir.mkdir()
 
         plugin_a = """\
 from pathlib import Path
-from matt_stack.auditors.base import AuditType, BaseAuditor, AuditFinding
+from mattstack.auditors.base import AuditType, BaseAuditor, AuditFinding
 
 class AlphaAuditor(BaseAuditor):
     audit_type = AuditType.QUALITY
@@ -116,7 +116,7 @@ class AlphaAuditor(BaseAuditor):
 """
         plugin_b = """\
 from pathlib import Path
-from matt_stack.auditors.base import AuditType, BaseAuditor, AuditFinding
+from mattstack.auditors.base import AuditType, BaseAuditor, AuditFinding
 
 class BetaAuditor(BaseAuditor):
     audit_type = AuditType.TESTS
@@ -133,10 +133,10 @@ class BetaAuditor(BaseAuditor):
 
     def test_plugin_with_metadata(self, tmp_path: Path) -> None:
         """Plugin with PLUGIN_META should load and metadata should be accessible."""
-        plugin_dir = tmp_path / "matt-stack-plugins"
+        plugin_dir = tmp_path / "mattstack-plugins"
         plugin_dir.mkdir()
         (plugin_dir / "meta_plugin.py").write_text(
-            "from matt_stack.auditors.base import AuditType, BaseAuditor\n\n"
+            "from mattstack.auditors.base import AuditType, BaseAuditor\n\n"
             "PLUGIN_META = {\n"
             '    "name": "Test Meta Plugin",\n'
             '    "version": "1.0.0",\n'
@@ -153,10 +153,10 @@ class BetaAuditor(BaseAuditor):
 
     def test_plugin_with_invalid_metadata(self, tmp_path: Path) -> None:
         """Plugin with non-dict PLUGIN_META should still load, ignoring metadata."""
-        plugin_dir = tmp_path / "matt-stack-plugins"
+        plugin_dir = tmp_path / "mattstack-plugins"
         plugin_dir.mkdir()
         (plugin_dir / "bad_meta.py").write_text(
-            "from matt_stack.auditors.base import AuditType, BaseAuditor\n\n"
+            "from mattstack.auditors.base import AuditType, BaseAuditor\n\n"
             'PLUGIN_META = "not a dict"\n\n'
             "class BadMetaAuditor(BaseAuditor):\n"
             "    audit_type = AuditType.QUALITY\n"
@@ -168,7 +168,7 @@ class BetaAuditor(BaseAuditor):
         assert plugins[0].__name__ == "BadMetaAuditor"
 
     def test_mixed_valid_and_broken_plugins(self, tmp_path: Path) -> None:
-        plugin_dir = tmp_path / "matt-stack-plugins"
+        plugin_dir = tmp_path / "mattstack-plugins"
         plugin_dir.mkdir()
         (plugin_dir / "good.py").write_text(VALID_PLUGIN)
         (plugin_dir / "broken.py").write_text(BROKEN_PLUGIN)

@@ -1,19 +1,19 @@
-# matt-stack Plugin Guide
+# mattstack Plugin Guide
 
-Write custom audit rules by dropping Python files into `matt-stack-plugins/` in your project root.
+Write custom audit rules by dropping Python files into `mattstack-plugins/` in your project root.
 
 ## Quick Start
 
-1. Create `matt-stack-plugins/` in your project root
+1. Create `mattstack-plugins/` in your project root
 2. Add a `.py` file with a `BaseAuditor` subclass
-3. Run `matt-stack audit` -- your plugin runs automatically
+3. Run `mattstack audit` -- your plugin runs automatically
 
 ## Basic Plugin
 
 ```python
 """Check for hardcoded API keys."""
 from pathlib import Path
-from matt_stack.auditors.base import AuditType, BaseAuditor, Severity
+from mattstack.auditors.base import AuditType, BaseAuditor, Severity
 
 class ApiKeyAuditor(BaseAuditor):
     audit_type = AuditType.QUALITY

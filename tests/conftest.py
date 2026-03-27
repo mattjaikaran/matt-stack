@@ -1,4 +1,4 @@
-"""Test fixtures for matt-stack."""
+"""Test fixtures for mattstack."""
 
 from __future__ import annotations
 
@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from matt_stack.config import ProjectConfig, ProjectType, Variant
+from mattstack.config import ProjectConfig, ProjectType, Variant
 
 
 @pytest.fixture

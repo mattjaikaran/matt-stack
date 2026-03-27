@@ -1,4 +1,4 @@
-"""Tests for matt-stack lint command."""
+"""Tests for mattstack lint command."""
 
 from __future__ import annotations
 
@@ -10,7 +10,7 @@ from unittest.mock import patch
 import pytest
 import typer
 
-from matt_stack.commands.lint import _has_backend, _has_frontend, run_lint
+from mattstack.commands.lint import _has_backend, _has_frontend, run_lint
 
 
 class TestHasBackend:
@@ -68,7 +68,7 @@ class TestRunLint:
         backend = tmp_path / "backend"
         backend.mkdir()
         (backend / "pyproject.toml").write_text('[project]\nname = "test"\n')
-        with patch("matt_stack.commands.lint.subprocess.run") as mock_run:
+        with patch("mattstack.commands.lint.subprocess.run") as mock_run:
             mock_run.return_value = subprocess.CompletedProcess(
                 args=[], returncode=0, stdout="", stderr=""
             )

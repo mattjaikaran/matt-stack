@@ -3,8 +3,8 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "matt-stack"
-version = "0.1.0"
+name = "mattstack"
+version = "0.5.0"
 description = "CLI to scaffold fullstack monorepos from battle-tested boilerplates"
 readme = "README.md"
 license = "MIT"
@@ -30,8 +30,8 @@ dependencies = [
 ]
 
 [project.scripts]
-matt-stack = "matt_stack.cli:app"
-ms = "matt_stack.cli:app"
+mattstack = "mattstack.cli:app"
+ms = "mattstack.cli:app"
 
 [project.optional-dependencies]
 dev = [
@@ -41,7 +41,7 @@ dev = [
 ]
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/matt_stack"]
+packages = ["src/mattstack"]
 
 [tool.ruff]
 target-version = "py312"

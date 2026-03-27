@@ -5,8 +5,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from matt_stack.auditors.base import AuditConfig, Severity
-from matt_stack.auditors.dependencies import DependencyAuditor
+from mattstack.auditors.base import AuditConfig, Severity
+from mattstack.auditors.dependencies import DependencyAuditor
 
 
 def _make_config(path: Path, **kwargs) -> AuditConfig:

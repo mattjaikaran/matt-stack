@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from matt_stack.parsers.python_schemas import parse_pydantic_file
+from mattstack.parsers.python_schemas import parse_pydantic_file
 
 
 def test_parse_basic_schema(tmp_path: Path) -> None:

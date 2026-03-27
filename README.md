@@ -1,4 +1,4 @@
-# matt-stack
+# mattstack
 
 CLI to scaffold fullstack monorepos from battle-tested boilerplates, then audit them for quality.
 
@@ -14,46 +14,46 @@ Or install globally:
 uv tool install .
 ```
 
-Both `matt-stack` and `ms` are available as entry points.
+Both `mattstack` and `ms` are available as entry points.
 
 ## Quick Start
 
 ```bash
 # Interactive wizard — walks you through every option
-matt-stack init
+mattstack init
 
 # One-liner with preset
-matt-stack init my-app --preset starter-fullstack
+mattstack init my-app --preset starter-fullstack
 
 # With iOS client
-matt-stack init my-app --preset starter-fullstack --ios
+mattstack init my-app --preset starter-fullstack --ios
 
 # From a YAML config file
-matt-stack init --config project.yaml
+mattstack init --config project.yaml
 
 # Specify output directory
-matt-stack init my-app --preset b2b-fullstack -o ~/projects
+mattstack init my-app --preset b2b-fullstack -o ~/projects
 ```
 
 ## Commands
 
 | Command | Description |
 |---------|-------------|
-| `matt-stack init [name]` | Create a new project from boilerplates |
-| `matt-stack add <component>` | Add frontend/backend/ios to existing project |
-| `matt-stack upgrade` | Pull latest boilerplate changes into project |
-| `matt-stack audit [path]` | Run static analysis on a generated project |
-| `matt-stack dev` | Start all development services (docker, backend, frontend) |
-| `matt-stack test` | Run tests across backend and frontend |
-| `matt-stack lint` | Run linters across backend and frontend |
-| `matt-stack env [action]` | Manage environment variables (.env files) |
-| `matt-stack doctor` | Check your development environment |
-| `matt-stack info` | Show available presets and source repos |
-| `matt-stack context [path]` | Dump project context for AI agents |
-| `matt-stack client <cmd>` | Frontend package manager wrapper (bun/npm/yarn/pnpm) |
-| `matt-stack config [action]` | Manage user config (show/path/init) |
-| `matt-stack completions` | Install shell completions (bash/zsh/fish) |
-| `matt-stack version` | Show version (with update check) |
+| `mattstack init [name]` | Create a new project from boilerplates |
+| `mattstack add <component>` | Add frontend/backend/ios to existing project |
+| `mattstack upgrade` | Pull latest boilerplate changes into project |
+| `mattstack audit [path]` | Run static analysis on a generated project |
+| `mattstack dev` | Start all development services (docker, backend, frontend) |
+| `mattstack test` | Run tests across backend and frontend |
+| `mattstack lint` | Run linters across backend and frontend |
+| `mattstack env [action]` | Manage environment variables (.env files) |
+| `mattstack doctor` | Check your development environment |
+| `mattstack info` | Show available presets and source repos |
+| `mattstack context [path]` | Dump project context for AI agents |
+| `mattstack client <cmd>` | Frontend package manager wrapper (bun/npm/yarn/pnpm) |
+| `mattstack config [action]` | Manage user config (show/path/init) |
+| `mattstack completions` | Install shell completions (bash/zsh/fish) |
+| `mattstack version` | Show version (with update check) |
 
 ### Global Options
 
@@ -103,28 +103,28 @@ matt-stack init my-app --preset b2b-fullstack -o ~/projects
 
 ```bash
 # All audits on current directory
-matt-stack audit
+mattstack audit
 
 # Specific project path
-matt-stack audit /path/to/project
+mattstack audit /path/to/project
 
 # Type safety only
-matt-stack audit -t types
+mattstack audit -t types
 
 # Multiple audit types
-matt-stack audit -t quality -t tests
+mattstack audit -t quality -t tests
 
 # Live endpoint probing (server must be running)
-matt-stack audit -t endpoints --live
+mattstack audit -t endpoints --live
 
 # JSON for CI pipelines
-matt-stack audit --json
+mattstack audit --json
 
 # Auto-fix debug statements
-matt-stack audit -t quality --fix
+mattstack audit -t quality --fix
 
 # HTML dashboard
-matt-stack audit --html
+mattstack audit --html
 ```
 
 ### `dev` Options
@@ -137,13 +137,13 @@ matt-stack audit --html
 
 ```bash
 # Start everything (docker + backend + frontend)
-matt-stack dev
+mattstack dev
 
 # Backend only
-matt-stack dev --services backend
+mattstack dev --services backend
 
 # Skip Docker, just start app servers
-matt-stack dev --no-docker
+mattstack dev --no-docker
 ```
 
 ### `test` Options
@@ -158,13 +158,13 @@ matt-stack dev --no-docker
 
 ```bash
 # Run all tests
-matt-stack test
+mattstack test
 
 # Backend only with coverage
-matt-stack test --backend-only --coverage
+mattstack test --backend-only --coverage
 
 # Run both in parallel
-matt-stack test --parallel
+mattstack test --parallel
 ```
 
 ### `lint` Options
@@ -179,13 +179,13 @@ matt-stack test --parallel
 
 ```bash
 # Check all
-matt-stack lint
+mattstack lint
 
 # Auto-fix everything
-matt-stack lint --fix
+mattstack lint --fix
 
 # Check formatting too
-matt-stack lint --format-check
+mattstack lint --format-check
 ```
 
 ### `env` Actions
@@ -198,13 +198,13 @@ matt-stack lint --format-check
 
 ```bash
 # Check for missing env vars
-matt-stack env check
+mattstack env check
 
 # Auto-sync missing vars from .env.example
-matt-stack env sync
+mattstack env sync
 
 # Show current env vars (values masked)
-matt-stack env show
+mattstack env show
 ```
 
 ### `context` Options
@@ -216,10 +216,10 @@ matt-stack env show
 
 ```bash
 # Dump project context for AI agents
-matt-stack context
+mattstack context
 
 # Write to file
-matt-stack context -o context.md
+mattstack context -o context.md
 ```
 
 ### `client` Subcommands
@@ -239,26 +239,26 @@ Unified frontend package manager wrapper — auto-detects bun/npm/yarn/pnpm from
 
 ```bash
 # Add a dependency
-matt-stack client add zustand
+mattstack client add zustand
 
 # Run a script
-matt-stack client run generate
+mattstack client run generate
 
 # Check which package manager
-matt-stack client which
+mattstack client which
 ```
 
 ### `completions`
 
 ```bash
 # Show instructions
-matt-stack completions
+mattstack completions
 
 # Install for your shell (bash/zsh/fish)
-matt-stack completions --install
+mattstack completions --install
 
 # Show completion script
-matt-stack completions --show
+mattstack completions --show
 ```
 
 ## Presets
@@ -325,10 +325,10 @@ Scans all `.py`, `.ts`, `.tsx`, `.js`, `.jsx` files for:
 
 ### Custom Auditors (Plugin System)
 
-Drop `.py` files into `matt-stack-plugins/` in your project root to add custom audit rules. Each file should export a class that inherits `BaseAuditor`:
+Drop `.py` files into `mattstack-plugins/` in your project root to add custom audit rules. Each file should export a class that inherits `BaseAuditor`:
 
 ```python
-from matt_stack.auditors.base import AuditType, BaseAuditor, Severity
+from mattstack.auditors.base import AuditType, BaseAuditor, Severity
 
 class MyCustomAuditor(BaseAuditor):
     audit_type = AuditType.QUALITY  # or any AuditType
@@ -364,17 +364,17 @@ Include an iOS client with any fullstack project:
 
 ```bash
 # During project creation
-matt-stack init my-app --preset starter-fullstack --ios
+mattstack init my-app --preset starter-fullstack --ios
 
 # Add to an existing project
-matt-stack add ios --path /path/to/project
+mattstack add ios --path /path/to/project
 ```
 
 The iOS client is cloned from [swift-ios-starter](https://github.com/mattjaikaran/swift-ios-starter) and auto-renamed from the default `MyApp` to match your project's display name. It targets SwiftUI with iOS 17+ and uses the MVVM pattern.
 
 **Backend networking**: The generated iOS project includes an API client configured with a base URL constant. Update it to point at your backend (e.g. `http://localhost:8000` for local development).
 
-**Audit limitation**: The `matt-stack audit` command does not yet scan `.swift` files. Type safety, quality, and test auditors currently cover Python and TypeScript only.
+**Audit limitation**: The `mattstack audit` command does not yet scan `.swift` files. Type safety, quality, and test auditors currently cover Python and TypeScript only.
 
 ## Source Repositories
 
@@ -388,7 +388,7 @@ The iOS client is cloned from [swift-ios-starter](https://github.com/mattjaikara
 ## Architecture
 
 ```
-src/matt_stack/
+src/mattstack/
 ├── cli.py              # Typer app — all commands
 ├── config.py           # Enums, ProjectConfig, REPO_URLS
 ├── presets.py           # 8 preset definitions
@@ -444,15 +444,15 @@ src/matt_stack/
 
 ## Ecosystem
 
-matt-stack is extensible -- bring your own boilerplates, presets, and audit plugins.
+mattstack is extensible -- bring your own boilerplates, presets, and audit plugins.
 
-- **Custom repos & presets**: `~/.matt-stack/config.yaml` -- see [Ecosystem Guide](docs/ecosystem.md)
-- **Audit plugins**: Drop `.py` files in `matt-stack-plugins/` -- see [Plugin Guide](docs/plugin-guide.md)
+- **Custom repos & presets**: `~/.mattstack/config.yaml` -- see [Ecosystem Guide](docs/ecosystem.md)
+- **Audit plugins**: Drop `.py` files in `mattstack-plugins/` -- see [Plugin Guide](docs/plugin-guide.md)
 - **Deployment targets**: 8 platforms supported -- see [Deployment Guide](docs/deployment-guide.md)
 
 ```bash
-matt-stack config init   # Create user config template
-matt-stack config show   # View current config
+mattstack config init   # Create user config template
+mattstack config show   # View current config
 ```
 
 ## Development

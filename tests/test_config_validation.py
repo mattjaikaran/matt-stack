@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from matt_stack.config import ProjectConfig, ProjectType
+from mattstack.config import ProjectConfig, ProjectType
 
 
 def test_empty_name_raises() -> None:

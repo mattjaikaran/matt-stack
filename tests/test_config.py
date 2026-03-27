@@ -2,7 +2,7 @@
 
 from pathlib import Path
 
-from matt_stack.config import (
+from mattstack.config import (
     ProjectConfig,
     Variant,
     normalize_name,

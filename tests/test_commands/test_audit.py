@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from matt_stack.commands.audit import run_audit
+from mattstack.commands.audit import run_audit
 
 
 def _make_project(tmp_path: Path) -> Path:

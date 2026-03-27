@@ -8,7 +8,7 @@ from unittest.mock import patch
 import click.exceptions
 import pytest
 
-from matt_stack.commands.upgrade import (
+from mattstack.commands.upgrade import (
     SKIP_FILES,
     UpgradeReport,
     _compare_directories,
@@ -278,8 +278,8 @@ def test_dry_run_reports_changes_without_applying(tmp_path: Path) -> None:
         return _fake_clone(destination)
 
     with (
-        patch("matt_stack.commands.upgrade.clone_repo", side_effect=mock_clone),
-        patch("matt_stack.commands.upgrade.remove_git_history"),
+        patch("mattstack.commands.upgrade.clone_repo", side_effect=mock_clone),
+        patch("mattstack.commands.upgrade.remove_git_history"),
     ):
         run_upgrade(proj, component="backend", dry_run=True)
 
@@ -302,8 +302,8 @@ def test_new_files_are_copied(tmp_path: Path) -> None:
         return _fake_clone(destination)
 
     with (
-        patch("matt_stack.commands.upgrade.clone_repo", side_effect=mock_clone),
-        patch("matt_stack.commands.upgrade.remove_git_history"),
+        patch("mattstack.commands.upgrade.clone_repo", side_effect=mock_clone),
+        patch("mattstack.commands.upgrade.remove_git_history"),
     ):
         run_upgrade(proj, component="backend", dry_run=False)
 
@@ -322,8 +322,8 @@ def test_modified_files_skipped_without_force(tmp_path: Path) -> None:
         return _fake_clone(destination)
 
     with (
-        patch("matt_stack.commands.upgrade.clone_repo", side_effect=mock_clone),
-        patch("matt_stack.commands.upgrade.remove_git_history"),
+        patch("mattstack.commands.upgrade.clone_repo", side_effect=mock_clone),
+        patch("mattstack.commands.upgrade.remove_git_history"),
     ):
         run_upgrade(proj, component="backend", dry_run=False, force=False)
 
@@ -339,8 +339,8 @@ def test_modified_files_overwritten_with_force(tmp_path: Path) -> None:
         return _fake_clone(destination)
 
     with (
-        patch("matt_stack.commands.upgrade.clone_repo", side_effect=mock_clone),
-        patch("matt_stack.commands.upgrade.remove_git_history"),
+        patch("mattstack.commands.upgrade.clone_repo", side_effect=mock_clone),
+        patch("mattstack.commands.upgrade.remove_git_history"),
     ):
         run_upgrade(proj, component="backend", dry_run=False, force=True)
 
@@ -354,8 +354,8 @@ def test_clone_failure_returns_empty_report(tmp_path: Path) -> None:
     proj = _make_project(tmp_path, backend=True, frontend=False)
 
     with (
-        patch("matt_stack.commands.upgrade.clone_repo", return_value=False),
-        patch("matt_stack.commands.upgrade.remove_git_history"),
+        patch("mattstack.commands.upgrade.clone_repo", return_value=False),
+        patch("mattstack.commands.upgrade.remove_git_history"),
     ):
         # Should not raise, just report the error
         run_upgrade(proj, component="backend", dry_run=False)

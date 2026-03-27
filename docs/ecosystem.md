@@ -1,10 +1,10 @@
-# matt-stack Ecosystem Guide
+# mattstack Ecosystem Guide
 
-matt-stack is designed to be extensible. You can bring your own boilerplate repos, define custom presets, and write audit plugins.
+mattstack is designed to be extensible. You can bring your own boilerplate repos, define custom presets, and write audit plugins.
 
 ## Custom Boilerplate Repos
 
-Override or add new source repositories in `~/.matt-stack/config.yaml`:
+Override or add new source repositories in `~/.mattstack/config.yaml`:
 
 ```yaml
 repos:
@@ -33,7 +33,7 @@ presets:
 
 ## Custom Presets
 
-Define presets in `~/.matt-stack/config.yaml`:
+Define presets in `~/.mattstack/config.yaml`:
 
 ```yaml
 presets:
@@ -78,9 +78,9 @@ defaults:
 ## Config Commands
 
 ```bash
-matt-stack config show   # Display current config
-matt-stack config path   # Print config file path
-matt-stack config init   # Create template config
+mattstack config show   # Display current config
+mattstack config path   # Print config file path
+mattstack config init   # Create template config
 ```
 
 ## Plugin System

@@ -1,4 +1,4 @@
-"""Tests for matt-stack completions command."""
+"""Tests for mattstack completions command."""
 
 from __future__ import annotations
 
@@ -8,8 +8,8 @@ from unittest.mock import patch
 import pytest
 from typer.testing import CliRunner
 
-from matt_stack.cli import app
-from matt_stack.commands.completions import _detect_shell, run_completions
+from mattstack.cli import app
+from mattstack.commands.completions import _detect_shell, run_completions
 
 
 class TestDetectShell:
@@ -50,7 +50,7 @@ class TestRunCompletions:
     def test_show_without_shell_exits_1(self) -> None:
         import typer
 
-        with patch("matt_stack.commands.completions._detect_shell", return_value=None):
+        with patch("mattstack.commands.completions._detect_shell", return_value=None):
             with pytest.raises(typer.Exit) as exc_info:
                 run_completions(show=True)
             assert exc_info.value.exit_code == 1
@@ -63,4 +63,4 @@ class TestCompletionsCliIntegration:
             result = runner.invoke(app, ["completions"])
             assert result.exit_code == 0
             assert "Install" in result.output or "install" in result.output.lower()
-            assert "matt-stack completions" in result.output
+            assert "mattstack completions" in result.output

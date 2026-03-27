@@ -5,8 +5,8 @@ from __future__ import annotations
 from pathlib import Path
 from unittest.mock import patch
 
-from matt_stack.config import ProjectConfig, ProjectType, Variant
-from matt_stack.generators.ios import (
+from mattstack.config import ProjectConfig, ProjectType, Variant
+from mattstack.generators.ios import (
     _customize_ios_project,
     _rename_ios_directories,
     add_ios_to_project,
@@ -25,8 +25,8 @@ def _make_config(tmp_path: Path, **kwargs) -> ProjectConfig:
     return ProjectConfig(**defaults)
 
 
-@patch("matt_stack.generators.ios.remove_git_history")
-@patch("matt_stack.generators.ios.clone_repo", return_value=True)
+@patch("mattstack.generators.ios.remove_git_history")
+@patch("mattstack.generators.ios.clone_repo", return_value=True)
 def test_add_ios_clones_and_removes_git(mock_clone, mock_rm_git, tmp_path: Path) -> None:
     config = _make_config(tmp_path)
     config.path.mkdir(parents=True)
@@ -41,8 +41,8 @@ def test_add_ios_clones_and_removes_git(mock_clone, mock_rm_git, tmp_path: Path)
     mock_rm_git.assert_called_once_with(config.ios_dir)
 
 
-@patch("matt_stack.generators.ios.remove_git_history")
-@patch("matt_stack.generators.ios.clone_repo", return_value=True)
+@patch("mattstack.generators.ios.remove_git_history")
+@patch("mattstack.generators.ios.clone_repo", return_value=True)
 def test_add_ios_skips_if_dir_exists(mock_clone, mock_rm_git, tmp_path: Path) -> None:
     config = _make_config(tmp_path)
     config.ios_dir.mkdir(parents=True)
@@ -54,8 +54,8 @@ def test_add_ios_skips_if_dir_exists(mock_clone, mock_rm_git, tmp_path: Path) ->
     mock_rm_git.assert_not_called()
 
 
-@patch("matt_stack.generators.ios.remove_git_history")
-@patch("matt_stack.generators.ios.clone_repo", return_value=False)
+@patch("mattstack.generators.ios.remove_git_history")
+@patch("mattstack.generators.ios.clone_repo", return_value=False)
 def test_add_ios_returns_false_on_clone_failure(mock_clone, mock_rm_git, tmp_path: Path) -> None:
     config = _make_config(tmp_path)
     config.path.mkdir(parents=True)
@@ -67,8 +67,8 @@ def test_add_ios_returns_false_on_clone_failure(mock_clone, mock_rm_git, tmp_pat
     mock_rm_git.assert_not_called()
 
 
-@patch("matt_stack.generators.ios.remove_git_history")
-@patch("matt_stack.generators.ios.clone_repo", return_value=True)
+@patch("mattstack.generators.ios.remove_git_history")
+@patch("mattstack.generators.ios.clone_repo", return_value=True)
 def test_add_ios_uses_swift_ios_repo_url(mock_clone, mock_rm_git, tmp_path: Path) -> None:
     config = _make_config(tmp_path)
     config.path.mkdir(parents=True)

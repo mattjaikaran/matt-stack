@@ -1,4 +1,4 @@
-# matt-stack
+# mattstack
 
 CLI tool to scaffold fullstack monorepos and audit them for quality.
 
@@ -11,58 +11,58 @@ CLI tool to scaffold fullstack monorepos and audit them for quality.
 ## CLI Reference
 
 ```bash
-matt-stack init [name]           # Create project (interactive or preset)
-matt-stack init my-app -p starter-fullstack  # Preset mode
-matt-stack init --config f.yaml  # Config file mode
-matt-stack add frontend          # Add component to existing project
-matt-stack add backend --path .  # Add backend to frontend-only project
-matt-stack add ios               # Add iOS client
-matt-stack upgrade               # Pull latest boilerplate changes
-matt-stack upgrade -c backend    # Upgrade specific component
-matt-stack upgrade --dry-run     # Preview changes without applying
-matt-stack audit [path]          # Static analysis (all 5 domains)
-matt-stack audit -t quality      # Single domain
-matt-stack audit -t dependencies # Dependency version checks
-matt-stack audit --json          # Machine-readable
-matt-stack audit --html          # Browsable HTML dashboard
-matt-stack audit --fix           # Auto-remove debug statements
-matt-stack audit -s error        # Filter by minimum severity
-matt-stack client add react      # Add frontend package (bun by default)
-matt-stack client add zod -D     # Add as dev dependency
-matt-stack client remove axios   # Remove a package
-matt-stack client install        # Install all deps
-matt-stack client run dev        # Run a package.json script
-matt-stack client dev            # Start frontend dev server
-matt-stack client build          # Production build
-matt-stack client exec tsc       # Run binary (bunx/npx)
-matt-stack client which          # Show detected package manager
-matt-stack client add react --pm npm  # Override package manager
-matt-stack dev                   # Start all services (docker + backend + frontend)
-matt-stack dev --services backend,frontend  # Start specific services
-matt-stack dev --no-docker       # Skip Docker infrastructure
-matt-stack test                  # Run tests across backend and frontend
-matt-stack test --backend-only   # Run backend tests only
-matt-stack test --coverage       # Run with coverage
-matt-stack test --parallel       # Run backend + frontend in parallel
-matt-stack lint                  # Run linters across backend and frontend
-matt-stack lint --fix            # Auto-fix lint issues
-matt-stack lint --format-check   # Also check formatting
-matt-stack env check             # Compare .env.example vs .env
-matt-stack env sync              # Copy missing vars from .env.example
-matt-stack env show              # Show env vars (values masked)
-matt-stack context               # Dump project context for AI agents
-matt-stack context --json        # JSON output for programmatic use
-matt-stack context -o ctx.md     # Write context to file
-matt-stack completions           # Shell completion instructions
-matt-stack completions --install # Install bash/zsh/fish completions
-matt-stack doctor                # Check environment
-matt-stack info                  # Show presets and repos
+mattstack init [name]           # Create project (interactive or preset)
+mattstack init my-app -p starter-fullstack  # Preset mode
+mattstack init --config f.yaml  # Config file mode
+mattstack add frontend          # Add component to existing project
+mattstack add backend --path .  # Add backend to frontend-only project
+mattstack add ios               # Add iOS client
+mattstack upgrade               # Pull latest boilerplate changes
+mattstack upgrade -c backend    # Upgrade specific component
+mattstack upgrade --dry-run     # Preview changes without applying
+mattstack audit [path]          # Static analysis (all 5 domains)
+mattstack audit -t quality      # Single domain
+mattstack audit -t dependencies # Dependency version checks
+mattstack audit --json          # Machine-readable
+mattstack audit --html          # Browsable HTML dashboard
+mattstack audit --fix           # Auto-remove debug statements
+mattstack audit -s error        # Filter by minimum severity
+mattstack client add react      # Add frontend package (bun by default)
+mattstack client add zod -D     # Add as dev dependency
+mattstack client remove axios   # Remove a package
+mattstack client install        # Install all deps
+mattstack client run dev        # Run a package.json script
+mattstack client dev            # Start frontend dev server
+mattstack client build          # Production build
+mattstack client exec tsc       # Run binary (bunx/npx)
+mattstack client which          # Show detected package manager
+mattstack client add react --pm npm  # Override package manager
+mattstack dev                   # Start all services (docker + backend + frontend)
+mattstack dev --services backend,frontend  # Start specific services
+mattstack dev --no-docker       # Skip Docker infrastructure
+mattstack test                  # Run tests across backend and frontend
+mattstack test --backend-only   # Run backend tests only
+mattstack test --coverage       # Run with coverage
+mattstack test --parallel       # Run backend + frontend in parallel
+mattstack lint                  # Run linters across backend and frontend
+mattstack lint --fix            # Auto-fix lint issues
+mattstack lint --format-check   # Also check formatting
+mattstack env check             # Compare .env.example vs .env
+mattstack env sync              # Copy missing vars from .env.example
+mattstack env show              # Show env vars (values masked)
+mattstack context               # Dump project context for AI agents
+mattstack context --json        # JSON output for programmatic use
+mattstack context -o ctx.md     # Write context to file
+mattstack completions           # Shell completion instructions
+mattstack completions --install # Install bash/zsh/fish completions
+mattstack doctor                # Check environment
+mattstack info                  # Show presets and repos
 ```
 
 ## File Map
 
 ```
-src/matt_stack/
+src/mattstack/
 ├── cli.py              # Typer app — 16 commands: init, add, upgrade, audit, dev, test, lint, env, client (subgroup), context, config, completions, doctor, info, presets, version
 ├── config.py           # ProjectType, Variant, FrontendFramework, DeploymentTarget enums
 │                       # ProjectConfig dataclass (13 fields, 9 computed properties incl. is_nextjs)
@@ -104,7 +104,7 @@ src/matt_stack/
 │   ├── dependencies.py # DependencyAuditor — unpinned, deprecated, duplicates, version conflicts
 │   ├── report.py       # print_report() (Rich table), print_json(), write_todo() (idempotent)
 │   ├── html_report.py  # generate_html_report() — standalone HTML dashboard with inline CSS/JS
-│   └── plugins.py      # discover_plugins() — loads BaseAuditor subclasses from matt-stack-plugins/
+│   └── plugins.py      # discover_plugins() — loads BaseAuditor subclasses from mattstack-plugins/
 │
 ├── parsers/
 │   ├── python_schemas.py    # PydanticSchema/PydanticField, parse_pydantic_file(), find_schema_files()
@@ -130,7 +130,7 @@ src/matt_stack/
 3. **ProjectConfig** is the single config object passed everywhere. Computed properties: `has_backend`, `has_frontend`, `is_fullstack`, `is_b2b`, `is_nextjs`, `backend_dir`, `frontend_dir`.
 4. **Parsers are pure functions** — regex-based, no AST, no new dependencies. Each returns dataclasses.
 5. **Auditors inherit BaseAuditor**. Each has `run() → list[AuditFinding]`, uses `self.add_finding()`.
-6. **Plugins** — custom auditors in `matt-stack-plugins/` are auto-discovered via `importlib.util`.
+6. **Plugins** — custom auditors in `mattstack-plugins/` are auto-discovered via `importlib.util`.
 7. **Report writer** uses `<!-- audit:start -->` / `<!-- audit:end -->` markers for idempotent todo.md updates.
 8. **HTML report** — `--html` generates standalone dashboard with inline CSS/JS, filter buttons, severity badges.
 9. **Lazy imports** in `cli.py` — each command imports its module only when invoked.
@@ -163,8 +163,8 @@ uv sync                        # Install
 uv run pytest -x -q            # Tests (586 tests)
 uv run ruff check src/ tests/  # Lint
 uv run ruff format src/ tests/ # Format
-uv run matt-stack init test --preset starter-fullstack -o /tmp  # E2E test
-uv run matt-stack audit /tmp/test  # E2E audit test
+uv run mattstack init test --preset starter-fullstack -o /tmp  # E2E test
+uv run mattstack audit /tmp/test  # E2E audit test
 ```
 
 ## Rules

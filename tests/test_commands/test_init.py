@@ -8,18 +8,18 @@ from unittest.mock import patch
 import click.exceptions
 import pytest
 
-from matt_stack.commands.init import (
+from mattstack.commands.init import (
     _generate,
     _run_from_preset,
     _run_interactive,
     run_init,
 )
-from matt_stack.config import FrontendFramework, ProjectConfig, ProjectType, Variant
+from mattstack.config import FrontendFramework, ProjectConfig, ProjectType, Variant
 
 
 def test_preset_creates_config(tmp_path: Path) -> None:
     """Preset mode should create a valid ProjectConfig."""
-    with patch("matt_stack.commands.init._generate") as mock_gen:
+    with patch("mattstack.commands.init._generate") as mock_gen:
         mock_gen.return_value = True
         _run_from_preset("my-app", "starter-fullstack", False, tmp_path)
         config = mock_gen.call_args[0][0]
@@ -29,7 +29,7 @@ def test_preset_creates_config(tmp_path: Path) -> None:
 
 
 def test_preset_with_ios(tmp_path: Path) -> None:
-    with patch("matt_stack.commands.init._generate") as mock_gen:
+    with patch("mattstack.commands.init._generate") as mock_gen:
         mock_gen.return_value = True
         _run_from_preset("my-app", "starter-fullstack", True, tmp_path)
         config = mock_gen.call_args[0][0]
@@ -44,7 +44,7 @@ def test_bad_preset_exits(tmp_path: Path) -> None:
 def test_yaml_config_mode(tmp_path: Path) -> None:
     cfg_file = tmp_path / "config.yaml"
     cfg_file.write_text("name: my-app\ntype: backend-only\nvariant: starter\n")
-    with patch("matt_stack.commands.init._generate") as mock_gen:
+    with patch("mattstack.commands.init._generate") as mock_gen:
         mock_gen.return_value = True
         run_init(config_file=str(cfg_file), output_dir=tmp_path)
         config = mock_gen.call_args[0][0]
@@ -93,14 +93,14 @@ def test_generate_dry_run_skips_dir_check(tmp_path: Path) -> None:
         dry_run=True,
         init_git=False,
     )
-    with patch("matt_stack.generators.fullstack.FullstackGenerator.run", return_value=True):
+    with patch("mattstack.generators.fullstack.FullstackGenerator.run", return_value=True):
         result = _generate(config)
     assert result is True
 
 
 def test_keyboard_interrupt_handling(tmp_path: Path) -> None:
     with (
-        patch("matt_stack.commands.init._run_interactive", side_effect=KeyboardInterrupt),
+        patch("mattstack.commands.init._run_interactive", side_effect=KeyboardInterrupt),
         pytest.raises((SystemExit, click.exceptions.Exit)),
     ):
         run_init(output_dir=tmp_path)
@@ -161,10 +161,10 @@ def _mock_questionary_for_wizard(
 def test_wizard_creates_fullstack(tmp_path: Path) -> None:
     """Interactive wizard should build a fullstack config with the chosen options."""
     with (
-        patch("matt_stack.commands.init._generate") as mock_gen,
-        patch("matt_stack.commands.init.questionary") as mock_q,
+        patch("mattstack.commands.init._generate") as mock_gen,
+        patch("mattstack.commands.init.questionary") as mock_q,
         patch(
-            "matt_stack.commands.init.get_git_user",
+            "mattstack.commands.init.get_git_user",
             return_value=("Test Author", "test@test.com"),
         ),
     ):
@@ -197,10 +197,10 @@ def test_wizard_creates_fullstack(tmp_path: Path) -> None:
 def test_wizard_creates_backend_only(tmp_path: Path) -> None:
     """Interactive wizard should create a backend-only project when selected."""
     with (
-        patch("matt_stack.commands.init._generate") as mock_gen,
-        patch("matt_stack.commands.init.questionary") as mock_q,
+        patch("mattstack.commands.init._generate") as mock_gen,
+        patch("mattstack.commands.init.questionary") as mock_q,
         patch(
-            "matt_stack.commands.init.get_git_user",
+            "mattstack.commands.init.get_git_user",
             return_value=("Test Author", "test@test.com"),
         ),
     ):
@@ -229,10 +229,10 @@ def test_wizard_creates_backend_only(tmp_path: Path) -> None:
 def test_wizard_cancel_on_name(tmp_path: Path) -> None:
     """Returning None from the name prompt should raise KeyboardInterrupt (caught by run_init)."""
     with (
-        patch("matt_stack.commands.init._generate") as mock_gen,
-        patch("matt_stack.commands.init.questionary") as mock_q,
+        patch("mattstack.commands.init._generate") as mock_gen,
+        patch("mattstack.commands.init.questionary") as mock_q,
         patch(
-            "matt_stack.commands.init.get_git_user",
+            "mattstack.commands.init.get_git_user",
             return_value=("Test Author", "test@test.com"),
         ),
         pytest.raises((SystemExit, click.exceptions.Exit)),
@@ -246,10 +246,10 @@ def test_wizard_cancel_on_name(tmp_path: Path) -> None:
 def test_wizard_cancel_on_confirm(tmp_path: Path) -> None:
     """Declining the final confirmation should skip generation."""
     with (
-        patch("matt_stack.commands.init._generate") as mock_gen,
-        patch("matt_stack.commands.init.questionary") as mock_q,
+        patch("mattstack.commands.init._generate") as mock_gen,
+        patch("mattstack.commands.init.questionary") as mock_q,
         patch(
-            "matt_stack.commands.init.get_git_user",
+            "mattstack.commands.init.get_git_user",
             return_value=("Test Author", "test@test.com"),
         ),
     ):
@@ -272,10 +272,10 @@ def test_wizard_cancel_on_confirm(tmp_path: Path) -> None:
 def test_wizard_default_name_skips_prompt(tmp_path: Path) -> None:
     """Passing default_name should skip the name prompt and use the provided name."""
     with (
-        patch("matt_stack.commands.init._generate") as mock_gen,
-        patch("matt_stack.commands.init.questionary") as mock_q,
+        patch("mattstack.commands.init._generate") as mock_gen,
+        patch("mattstack.commands.init.questionary") as mock_q,
         patch(
-            "matt_stack.commands.init.get_git_user",
+            "mattstack.commands.init.get_git_user",
             return_value=("Test Author", "test@test.com"),
         ),
     ):
@@ -316,7 +316,7 @@ def test_yaml_config_fullstack_creates_expected_config(tmp_path: Path) -> None:
         "  redis: true\n"
         "deployment: docker\n"
     )
-    with patch("matt_stack.commands.init._generate") as mock_gen:
+    with patch("mattstack.commands.init._generate") as mock_gen:
         mock_gen.return_value = True
         run_init(config_file=str(cfg_file), output_dir=tmp_path)
 
@@ -346,7 +346,7 @@ def test_yaml_config_backend_only_e2e(tmp_path: Path) -> None:
         "  name: Test Dev\n"
         "  email: dev@test.com\n"
     )
-    with patch("matt_stack.commands.init._generate") as mock_gen:
+    with patch("mattstack.commands.init._generate") as mock_gen:
         mock_gen.return_value = True
         run_init(config_file=str(cfg_file), output_dir=tmp_path)
 
@@ -366,7 +366,7 @@ def test_yaml_config_frontend_only_e2e(tmp_path: Path) -> None:
     cfg_file.write_text(
         "name: my-frontend\ntype: frontend-only\nfrontend:\n  framework: react-vite\n"
     )
-    with patch("matt_stack.commands.init._generate") as mock_gen:
+    with patch("mattstack.commands.init._generate") as mock_gen:
         mock_gen.return_value = True
         run_init(config_file=str(cfg_file), output_dir=tmp_path)
 
@@ -403,7 +403,7 @@ def test_yaml_config_dry_run_flag(tmp_path: Path) -> None:
     cfg_file = tmp_path / "config.yaml"
     cfg_file.write_text("name: dry-run-test\ntype: fullstack\n")
 
-    with patch("matt_stack.commands.init._generate") as mock_gen:
+    with patch("mattstack.commands.init._generate") as mock_gen:
         mock_gen.return_value = True
         run_init(config_file=str(cfg_file), output_dir=tmp_path, dry_run=True)
 
@@ -416,7 +416,7 @@ def test_yaml_config_with_ios_enabled(tmp_path: Path) -> None:
     cfg_file = tmp_path / "config.yaml"
     cfg_file.write_text("name: ios-app\ntype: fullstack\nios: true\n")
 
-    with patch("matt_stack.commands.init._generate") as mock_gen:
+    with patch("mattstack.commands.init._generate") as mock_gen:
         mock_gen.return_value = True
         run_init(config_file=str(cfg_file), output_dir=tmp_path)
 
@@ -429,7 +429,7 @@ def test_yaml_config_path_resolution(tmp_path: Path) -> None:
     cfg_file = tmp_path / "config.yaml"
     cfg_file.write_text("name: path-test\ntype: fullstack\n")
 
-    with patch("matt_stack.commands.init._generate") as mock_gen:
+    with patch("mattstack.commands.init._generate") as mock_gen:
         mock_gen.return_value = True
         custom_output = tmp_path / "projects"
         custom_output.mkdir()

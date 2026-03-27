@@ -5,7 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 from unittest.mock import patch
 
-from matt_stack.utils.package_manager import (
+from mattstack.utils.package_manager import (
     DEFAULT_PM,
     PackageManager,
     build_add_cmd,
@@ -72,7 +72,7 @@ class TestResolvePackageManager:
         result = resolve_package_manager(tmp_path, override="invalid")
         assert result == DEFAULT_PM
 
-    @patch("matt_stack.user_config.load_user_config")
+    @patch("mattstack.user_config.load_user_config")
     def test_user_config_override(self, mock_config, tmp_path: Path) -> None:
         mock_config.return_value = {"defaults": {"package_manager": "yarn"}}
         assert resolve_package_manager(tmp_path) == PackageManager.YARN

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from matt_stack.parsers.nextjs_routes import (
+from mattstack.parsers.nextjs_routes import (
     find_nextjs_app_dirs,
     parse_nextjs_routes,
 )

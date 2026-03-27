@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from matt_stack.config import DeploymentTarget, ProjectConfig, ProjectType, Variant
+from mattstack.config import DeploymentTarget, ProjectConfig, ProjectType, Variant
 
 # --- Fixtures ---
 
@@ -93,7 +93,7 @@ def self_hosted_config(tmp_path: Path) -> ProjectConfig:
 
 
 def test_fly_toml_fullstack(fly_fullstack_config: ProjectConfig) -> None:
-    from matt_stack.templates.deploy_fly import generate_fly_toml
+    from mattstack.templates.deploy_fly import generate_fly_toml
 
     content = generate_fly_toml(fly_fullstack_config)
     assert 'app = "my-app"' in content
@@ -103,7 +103,7 @@ def test_fly_toml_fullstack(fly_fullstack_config: ProjectConfig) -> None:
 
 
 def test_fly_toml_frontend(fly_frontend_config: ProjectConfig) -> None:
-    from matt_stack.templates.deploy_fly import generate_fly_toml
+    from mattstack.templates.deploy_fly import generate_fly_toml
 
     content = generate_fly_toml(fly_frontend_config)
     assert 'app = "my-frontend"' in content
@@ -114,7 +114,7 @@ def test_fly_toml_frontend(fly_frontend_config: ProjectConfig) -> None:
 
 
 def test_ecs_task_definition(aws_config: ProjectConfig) -> None:
-    from matt_stack.templates.deploy_aws import generate_ecs_task_definition
+    from mattstack.templates.deploy_aws import generate_ecs_task_definition
 
     content = generate_ecs_task_definition(aws_config)
     data = json.loads(content)
@@ -128,7 +128,7 @@ def test_ecs_task_definition(aws_config: ProjectConfig) -> None:
 
 
 def test_ecs_task_definition_backend_only(aws_backend_config: ProjectConfig) -> None:
-    from matt_stack.templates.deploy_aws import generate_ecs_task_definition
+    from mattstack.templates.deploy_aws import generate_ecs_task_definition
 
     content = generate_ecs_task_definition(aws_backend_config)
     data = json.loads(content)
@@ -137,7 +137,7 @@ def test_ecs_task_definition_backend_only(aws_backend_config: ProjectConfig) -> 
 
 
 def test_copilot_manifest(aws_config: ProjectConfig) -> None:
-    from matt_stack.templates.deploy_aws import generate_copilot_manifest
+    from mattstack.templates.deploy_aws import generate_copilot_manifest
 
     content = generate_copilot_manifest(aws_config)
     assert "name: my-app-api" in content
@@ -150,7 +150,7 @@ def test_copilot_manifest(aws_config: ProjectConfig) -> None:
 
 
 def test_cloud_run_yaml(gcp_config: ProjectConfig) -> None:
-    from matt_stack.templates.deploy_gcp import generate_cloud_run_yaml
+    from mattstack.templates.deploy_gcp import generate_cloud_run_yaml
 
     content = generate_cloud_run_yaml(gcp_config)
     assert "name: my-app-api" in content
@@ -160,7 +160,7 @@ def test_cloud_run_yaml(gcp_config: ProjectConfig) -> None:
 
 
 def test_app_engine_yaml(gcp_config: ProjectConfig) -> None:
-    from matt_stack.templates.deploy_gcp import generate_app_engine_yaml
+    from mattstack.templates.deploy_gcp import generate_app_engine_yaml
 
     content = generate_app_engine_yaml(gcp_config)
     assert "runtime: python312" in content
@@ -172,7 +172,7 @@ def test_app_engine_yaml(gcp_config: ProjectConfig) -> None:
 
 
 def test_hetzner_compose(hetzner_config: ProjectConfig) -> None:
-    from matt_stack.templates.deploy_hetzner import generate_hetzner_compose
+    from mattstack.templates.deploy_hetzner import generate_hetzner_compose
 
     content = generate_hetzner_compose(hetzner_config)
     assert "caddy:" in content
@@ -183,14 +183,14 @@ def test_hetzner_compose(hetzner_config: ProjectConfig) -> None:
 
 
 def test_hetzner_compose_has_redis(hetzner_config: ProjectConfig) -> None:
-    from matt_stack.templates.deploy_hetzner import generate_hetzner_compose
+    from mattstack.templates.deploy_hetzner import generate_hetzner_compose
 
     content = generate_hetzner_compose(hetzner_config)
     assert "redis:" in content
 
 
 def test_caddyfile(hetzner_config: ProjectConfig) -> None:
-    from matt_stack.templates.deploy_hetzner import generate_caddyfile
+    from mattstack.templates.deploy_hetzner import generate_caddyfile
 
     content = generate_caddyfile(hetzner_config)
     assert "my-app.example.com" in content
@@ -202,7 +202,7 @@ def test_caddyfile(hetzner_config: ProjectConfig) -> None:
 
 
 def test_self_hosted_compose(self_hosted_config: ProjectConfig) -> None:
-    from matt_stack.templates.deploy_self_hosted import generate_self_hosted_compose
+    from mattstack.templates.deploy_self_hosted import generate_self_hosted_compose
 
     content = generate_self_hosted_compose(self_hosted_config)
     assert "nginx:" in content
@@ -213,7 +213,7 @@ def test_self_hosted_compose(self_hosted_config: ProjectConfig) -> None:
 
 
 def test_nginx_conf(self_hosted_config: ProjectConfig) -> None:
-    from matt_stack.templates.deploy_self_hosted import generate_nginx_conf
+    from mattstack.templates.deploy_self_hosted import generate_nginx_conf
 
     content = generate_nginx_conf(self_hosted_config)
     assert "server_name my-app.example.com" in content
@@ -223,7 +223,7 @@ def test_nginx_conf(self_hosted_config: ProjectConfig) -> None:
 
 
 def test_systemd_service(self_hosted_config: ProjectConfig) -> None:
-    from matt_stack.templates.deploy_self_hosted import generate_systemd_service
+    from mattstack.templates.deploy_self_hosted import generate_systemd_service
 
     content = generate_systemd_service(self_hosted_config)
     assert "My App" in content  # display_name

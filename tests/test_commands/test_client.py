@@ -9,8 +9,8 @@ from unittest.mock import patch
 import pytest
 import typer
 
-from matt_stack.commands.client import _resolve
-from matt_stack.utils.package_manager import PackageManager
+from mattstack.commands.client import _resolve
+from mattstack.utils.package_manager import PackageManager
 
 
 class TestResolve:
@@ -51,9 +51,9 @@ class TestClientCommands:
         (tmp_path / "bun.lockb").write_text("")
         return tmp_path
 
-    @patch("matt_stack.commands.client.run_pm_command")
+    @patch("mattstack.commands.client.run_pm_command")
     def test_which_shows_pm(self, mock_run, tmp_path: Path) -> None:
         proj = self._setup_project(tmp_path)
-        from matt_stack.commands.client import which_pm
+        from mattstack.commands.client import which_pm
 
         which_pm(path=proj)

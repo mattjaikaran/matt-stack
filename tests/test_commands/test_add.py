@@ -8,13 +8,13 @@ from unittest.mock import patch
 import pytest
 import typer
 
-from matt_stack.commands.add import (
+from mattstack.commands.add import (
     VALID_COMPONENTS,
     _build_config,
     _detect_project,
     run_add,
 )
-from matt_stack.config import FrontendFramework, ProjectType
+from mattstack.config import FrontendFramework, ProjectType
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -156,8 +156,8 @@ class TestBuildConfig:
 
 
 class TestRunAdd:
-    @patch("matt_stack.commands.add.remove_git_history")
-    @patch("matt_stack.commands.add.clone_repo", side_effect=_mock_clone)
+    @patch("mattstack.commands.add.remove_git_history")
+    @patch("mattstack.commands.add.clone_repo", side_effect=_mock_clone)
     def test_add_frontend_to_backend(self, mock_clone, mock_rm_git, tmp_path: Path) -> None:
         proj = _make_backend_project(tmp_path / "my-app")
         run_add("frontend", proj)
@@ -169,8 +169,8 @@ class TestRunAdd:
         mock_clone.assert_called_once()
         mock_rm_git.assert_called_once()
 
-    @patch("matt_stack.commands.add.remove_git_history")
-    @patch("matt_stack.commands.add.clone_repo", side_effect=_mock_clone)
+    @patch("mattstack.commands.add.remove_git_history")
+    @patch("mattstack.commands.add.clone_repo", side_effect=_mock_clone)
     def test_add_backend_to_frontend(self, mock_clone, mock_rm_git, tmp_path: Path) -> None:
         proj = _make_frontend_project(tmp_path / "my-app")
         run_add("backend", proj)
@@ -178,8 +178,8 @@ class TestRunAdd:
         makefile = (proj / "Makefile").read_text()
         assert "backend" in makefile.lower()
 
-    @patch("matt_stack.commands.add.remove_git_history")
-    @patch("matt_stack.commands.add.clone_repo", side_effect=_mock_clone)
+    @patch("mattstack.commands.add.remove_git_history")
+    @patch("mattstack.commands.add.clone_repo", side_effect=_mock_clone)
     def test_add_ios_to_fullstack(self, mock_clone, mock_rm_git, tmp_path: Path) -> None:
         proj = _make_fullstack_project(tmp_path / "my-app")
         run_add("ios", proj)
@@ -212,8 +212,8 @@ class TestRunAdd:
         with pytest.raises(typer.Exit):
             run_add("frontend", tmp_path / "does-not-exist")
 
-    @patch("matt_stack.commands.add.remove_git_history")
-    @patch("matt_stack.commands.add.clone_repo", side_effect=_mock_clone)
+    @patch("mattstack.commands.add.remove_git_history")
+    @patch("mattstack.commands.add.clone_repo", side_effect=_mock_clone)
     def test_dry_run_does_not_clone(self, mock_clone, mock_rm_git, tmp_path: Path) -> None:
         proj = _make_backend_project(tmp_path / "my-app")
         original_makefile = (proj / "Makefile").read_text()
@@ -224,15 +224,15 @@ class TestRunAdd:
         # Makefile should not be changed
         assert (proj / "Makefile").read_text() == original_makefile
 
-    @patch("matt_stack.commands.add.remove_git_history")
-    @patch("matt_stack.commands.add.clone_repo", return_value=False)
+    @patch("mattstack.commands.add.remove_git_history")
+    @patch("mattstack.commands.add.clone_repo", return_value=False)
     def test_clone_failure_raises_exit(self, mock_clone, mock_rm_git, tmp_path: Path) -> None:
         proj = _make_backend_project(tmp_path / "my-app")
         with pytest.raises(typer.Exit):
             run_add("frontend", proj)
 
-    @patch("matt_stack.commands.add.remove_git_history")
-    @patch("matt_stack.commands.add.clone_repo", side_effect=_mock_clone)
+    @patch("mattstack.commands.add.remove_git_history")
+    @patch("mattstack.commands.add.clone_repo", side_effect=_mock_clone)
     def test_add_frontend_with_custom_framework(
         self, mock_clone, mock_rm_git, tmp_path: Path
     ) -> None:
@@ -242,8 +242,8 @@ class TestRunAdd:
         url = mock_clone.call_args[0][0]
         assert "react-vite-starter" in url
 
-    @patch("matt_stack.commands.add.remove_git_history")
-    @patch("matt_stack.commands.add.clone_repo", side_effect=_mock_clone)
+    @patch("mattstack.commands.add.remove_git_history")
+    @patch("mattstack.commands.add.clone_repo", side_effect=_mock_clone)
     def test_add_backend_generates_docker_compose(
         self, mock_clone, mock_rm_git, tmp_path: Path
     ) -> None:
@@ -253,8 +253,8 @@ class TestRunAdd:
         dc_content = (proj / "docker-compose.yml").read_text()
         assert "postgres" in dc_content.lower()
 
-    @patch("matt_stack.commands.add.remove_git_history")
-    @patch("matt_stack.commands.add.clone_repo", side_effect=_mock_clone)
+    @patch("mattstack.commands.add.remove_git_history")
+    @patch("mattstack.commands.add.clone_repo", side_effect=_mock_clone)
     def test_add_generates_env_example(self, mock_clone, mock_rm_git, tmp_path: Path) -> None:
         proj = _make_backend_project(tmp_path / "my-app")
         run_add("frontend", proj)
